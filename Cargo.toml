@@ -1,0 +1,40 @@
+[package]
+name = "arg-picker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+readme = "README.md"
+description = "A lightweight, type-safe Rust CLI argument parser"
+
+[features]
+mingling_support = ["arg-picker-macros/mingling_support"]
+
+[dependencies]
+arg-picker-macros.workspace = true
+just_fmt.workspace = true
+
+[workspace]
+members = ["./macros"]
+
+[workspace.package]
+version = "0.3.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/catilgrass/arg-picker"
+authors = ["Weicao-CatilGrass"]
+
+[workspace.dependencies]
+arg-picker-macros = { path = "./macros", version = "0.2.0" }
+syn = { version = "2.0.118", features = ["full", "visit-mut"] }
+quote = "1.0.46"
+proc-macro2 = "1.0.106"
+just_fmt = "0.2.1"
+
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--generate-link-to-definition",
+    "--html-in-header",
+    "doc/arborium-header.html"
+]

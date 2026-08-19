@@ -1,0 +1,20 @@
+[package]
+name = "arg-picker-macros"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository = "https://github.com/catilgrass/arg-picker/tree/main/macros"
+authors.workspace = true
+readme = "README.md"
+description = "Macros for arg-picker"
+
+[lib]
+proc-macro = true
+
+[features]
+mingling_support = []
+
+[dependencies]
+syn.workspace = true
+quote.workspace = true
+proc-macro2.workspace = true
