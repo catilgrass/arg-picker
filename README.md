@@ -86,3 +86,12 @@ or run `cargo add`
 ```bash
 cargo add arg-picker
 ```
+
+## License
+
+Licensed under either of the following at your option:
+
+- **MIT License**
+- **Apache License, Version 2.0**
+
+See the [LICENSE-MIT](./LICENSE-MIT) and [LICENSE-APACHE](./LICENSE-APACHE) files for details.
