@@ -7,6 +7,8 @@ repository.workspace = true
 authors.workspace = true
 readme = "README.md"
 description = "A lightweight, type-safe Rust CLI argument parser"
+keywords = ["cli", "argument", "parser", "command-line", "args"]
+categories = ["command-line-interface", "parser-implementations"]
 
 [features]
 mingling_support = ["arg-picker-macros/mingling_support"]
