@@ -519,6 +519,15 @@ impl<'a> IntoPicker<'a> for Vec<String> {
     }
 }
 
+impl<'a> IntoPicker<'a> for PickerArgs<'a> {
+    fn to_picker(self) -> Picker<'a, ()> {
+        Picker {
+            route_phantom: PhantomData,
+            args: self,
+        }
+    }
+}
+
 impl<'a, Route> Picker<'a, Route> {
     /// Build the `PickerPattern` via Arguments
     pub fn build_pattern1<N>(
