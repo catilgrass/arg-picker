@@ -11,7 +11,9 @@ keywords = ["cli", "argument", "parser", "command-line", "args"]
 categories = ["command-line-interface", "parser-implementations"]
 
 [features]
+default = []
 mingling_support = ["arg-picker-macros/mingling_support"]
+derive = ["arg-picker-macros/derive"]
 
 [dependencies]
 arg-picker-macros.workspace = true

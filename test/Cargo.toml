@@ -6,4 +6,4 @@ edition = "2024"
 [workspace]
 
 [dependencies]
-arg-picker = { path = "../" }
+arg-picker = { path = "../", features = ["derive"] }

@@ -5,6 +5,8 @@ use proc_macro::TokenStream;
 
 mod arg;
 mod internal_repeat;
+#[cfg(feature = "derive")]
+mod pickialize;
 
 /// Core proc-macro: repeats a template body `count` times.
 ///
@@ -30,4 +32,13 @@ pub fn internal_repeat(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn arg(input: TokenStream) -> TokenStream {
     arg::arg(input)
+}
+
+/// Derives `Pickable` for structs and `SinglePickable` for unit-only enums.
+///
+/// Only available when the `derive` feature is enabled.
+#[cfg(feature = "derive")]
+#[proc_macro_derive(Pickable, attributes(arg))]
+pub fn derive_pickable(input: TokenStream) -> TokenStream {
+    pickialize::derive_pickable(input)
 }

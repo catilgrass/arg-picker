@@ -7,7 +7,7 @@ doc-preview:
 	python3 -m http.server 3000
 
 build-picker:
-	cargo build --manifest-path Cargo.toml
+	cargo build --manifest-path Cargo.toml --features derive
 
 build-test-crate:
 	cargo build --manifest-path test/Cargo.toml
@@ -15,10 +15,10 @@ build-test-crate:
 build: build-picker build-test-crate
 
 test-picker:
-	cargo test --manifest-path Cargo.toml
+	cargo test --manifest-path Cargo.toml --features derive
 
 test-macros:
-	cargo test --manifest-path macros/Cargo.toml
+	cargo test --manifest-path macros/Cargo.toml --features derive
 
 test-test-crate:
 	cargo test --manifest-path test/Cargo.toml

@@ -64,6 +64,8 @@ None
     - **`OsString`** — parses any string argument into an owned OS string.
     - **`Duration`** — parses seconds (bare numeric input) or common suffixed forms such as `500ms`, `2m`, and `1.5h`.
 
+5. **[`macros`]** Added the `#[derive(Pickable)]` derive macro (gated behind the `derive` feature). For named structs it generates a `Pickable` implementation with up to 32 fields; fields without a `#[arg(...)]` helper are positional (equivalent to `arg![Type]`), while fields may customize the generated argument with a clap-like `#[arg(short = 's', long = "long", aliases = ["a", "b"])]` helper attribute to become named arguments; bare `short` and `long` are also supported and derive from the field name. For unit-only enums it generates a `SinglePickable` implementation that parses user input by converting it to `PascalCase` and matching the macro-generated PascalCase variant name. The derive macro is re-exported at the `arg_picker` crate root and in the prelude.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`pickable`]** Renamed the `MultiPickableWithBoundary` trait to `MultiPickable`. All references to the old trait name — including its blanket impl for `Vec<T>`, all inherent implementations, and the `SinglePickable`-adjacent internal call sites in `pickable`, `value::vec_until`, and related modules — have been updated to the shortened `MultiPickable` name. Public API code referencing `MultiPickableWithBoundary` will fail to compile and must migrate to `MultiPickable`.

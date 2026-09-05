@@ -13,6 +13,9 @@ pub use picker::*;
 mod pickable;
 pub use pickable::*;
 
+#[cfg(feature = "derive")]
+pub use arg_picker_macros::Pickable;
+
 mod arg;
 pub use arg::*;
 
@@ -36,11 +39,24 @@ pub mod value;
 pub mod prelude {
     pub use crate::IntoPicker;
     pub use crate::macros::arg;
+    #[cfg(feature = "derive")]
+    pub use crate::Pickable;
 }
 
 /// Re-export of the `arg_picker_macros` crate
 pub mod macros {
     pub use arg_picker_macros::arg;
+}
+
+/// Internal helpers used by proc-macro expansions. Not a public API.
+#[cfg(feature = "derive")]
+#[doc(hidden)]
+pub mod __private {
+    /// Converts a user-supplied string into `PascalCase` using `just_fmt`.
+    #[must_use]
+    pub fn to_pascal_case(input: &str) -> String {
+        just_fmt::pascal_case!(input.trim().to_string())
+    }
 }
 
 /// Provides the types necessary for implementing the `Pickable` trait
