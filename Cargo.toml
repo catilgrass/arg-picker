@@ -29,9 +29,9 @@ authors = ["Weicao-CatilGrass"]
 
 [workspace.dependencies]
 arg-picker-macros = { path = "./macros", version = "0.3.0" }
-syn = { version = "2.0.118", features = ["full", "visit-mut"] }
-quote = "1.0.46"
-proc-macro2 = "1.0.106"
+syn = { version = "3.0.5", features = ["full", "visit-mut"] }
+quote = "1.0.47"
+proc-macro2 = "1.0.107"
 just_fmt = "0.2.1"
 
 [package.metadata.docs.rs]
