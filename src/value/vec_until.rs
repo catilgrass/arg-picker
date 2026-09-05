@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
 use crate::{
-    BoundaryCheck, MultiPickableWithBoundary, Pickable, PickerArg, PickerArgAttr, PickerArgResult,
+    BoundaryCheck, MultiPickable, Pickable, PickerArg, PickerArgAttr, PickerArgResult,
     SinglePickable, TagPhaseContext,
     matcher_needed::Matcher,
     parselib::{MultiArgMatcher, ParserStyle},
@@ -56,9 +56,9 @@ impl<T> DerefMut for VecUntil<T> {
     }
 }
 
-// MultiPickableWithBoundary impl
+// MultiPickable impl
 
-impl<T> MultiPickableWithBoundary for VecUntil<T>
+impl<T> MultiPickable for VecUntil<T>
 where
     T: SinglePickable + BoundaryCheck,
 {
@@ -119,7 +119,7 @@ where
     fn pick(raw_strs: &[&str]) -> PickerArgResult<Self> {
         let strs = strip_flag(raw_strs);
         let owned: Vec<String> = strs.iter().map(|&s| s.to_string()).collect();
-        <Self as MultiPickableWithBoundary>::pick_multi(owned)
+        <Self as MultiPickable>::pick_multi(owned)
     }
 }
 

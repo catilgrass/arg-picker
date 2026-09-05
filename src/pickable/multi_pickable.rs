@@ -19,7 +19,7 @@ pub trait BoundaryCheck {
 /// Implementors define how a sequence of raw strings is converted into
 /// a single value, with an associated [`BoundaryCheck`] to control where
 /// collection stops.
-pub trait MultiPickableWithBoundary: Sized {
+pub trait MultiPickable: Sized {
     /// The boundary checker type that determines when to stop consuming
     /// positional arguments.
     type Checker: BoundaryCheck;
@@ -42,7 +42,7 @@ impl BoundaryCheck for NoBoundary {
 }
 
 /// `Vec<T>` is greedy — it takes everything with `NoBoundary`.
-impl<T: SinglePickable> MultiPickableWithBoundary for Vec<T> {
+impl<T: SinglePickable> MultiPickable for Vec<T> {
     type Checker = NoBoundary;
 
     fn pick_multi(raw: Vec<String>) -> PickerArgResult<Self> {
@@ -87,6 +87,6 @@ where
     fn pick(raw_strs: &[&str]) -> PickerArgResult<Self> {
         let strs = strip_flag(raw_strs);
         let owned: Vec<String> = strs.iter().map(|&s| s.to_string()).collect();
-        <Self as MultiPickableWithBoundary>::pick_multi(owned)
+        <Self as MultiPickable>::pick_multi(owned)
     }
 }

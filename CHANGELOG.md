@@ -60,7 +60,7 @@ None
 
 #### **BREAKING CHANGES** (API CHANGES):
 
-None
+1. **[`pickable`]** Renamed the `MultiPickableWithBoundary` trait to `MultiPickable`. All references to the old trait name — including its blanket impl for `Vec<T>`, all inherent implementations, and the `SinglePickable`-adjacent internal call sites in `pickable`, `value::vec_until`, and related modules — have been updated to the shortened `MultiPickable` name. Public API code referencing `MultiPickableWithBoundary` will fail to compile and must migrate to `MultiPickable`.
 
 ---
 
