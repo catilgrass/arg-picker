@@ -1,5 +1,8 @@
 mod pick_bool;
+mod pick_char;
+mod pick_duration;
 mod pick_flag;
+mod pick_os_string;
 mod pick_ip_attr;
 mod pick_numbers;
 mod pick_pathbuf;

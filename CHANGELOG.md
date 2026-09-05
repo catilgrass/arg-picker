@@ -58,6 +58,12 @@ None
 
 3. **[`build`]** Added a `Makefile` exposing common development tasks — `make build`, `make test`, `make clippy`, `make doc` / `make doc-preview`, and `make check` (build + test + clippy). Each task runs across the picker, macros, and test crates, with clippy enforcing `-D warnings`.
 
+4. **[`builtin`]** Added `SinglePickable` implementations for three more common standard-library types:
+
+    - **`char`** — parses a single-character string.
+    - **`OsString`** — parses any string argument into an owned OS string.
+    - **`Duration`** — parses seconds (bare numeric input) or common suffixed forms such as `500ms`, `2m`, and `1.5h`.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`pickable`]** Renamed the `MultiPickableWithBoundary` trait to `MultiPickable`. All references to the old trait name — including its blanket impl for `Vec<T>`, all inherent implementations, and the `SinglePickable`-adjacent internal call sites in `pickable`, `value::vec_until`, and related modules — have been updated to the shortened `MultiPickable` name. Public API code referencing `MultiPickableWithBoundary` will fail to compile and must migrate to `MultiPickable`.
