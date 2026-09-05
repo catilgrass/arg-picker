@@ -130,7 +130,7 @@ impl<'a> From<crate::TagPhaseContext<'a>> for MatcherContext<'a> {
 /// * `idx` - The index to check in the mask.
 #[inline]
 #[must_use]
-pub fn is_masked(mask: &[u8], idx: usize) -> bool {
+pub const fn is_masked(mask: &[u8], idx: usize) -> bool {
     idx < mask.len() && mask[idx] != 0
 }
 
