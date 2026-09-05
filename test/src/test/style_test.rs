@@ -28,7 +28,7 @@ fn test_powershell_style_flag_string() {
 
 #[test]
 fn test_build_possible_flags_windows() {
-    // Build PickerArgInfo from a flag definition: `verbose: bool`
+    // Build PickerArgInfo from a flag definition: `verbose: Flag`
     let mut info = PickerArgInfo::new();
     info.set_long("verbose");
     let flags = build_possible_flags(&WINDOWS_STYLE, &info);

@@ -16,8 +16,8 @@ fn test_or_route_triggered_to_result() {
 
 #[test]
 fn test_or_route_not_triggered_when_flag_present() {
-    // flag present → route not triggered → Ok
-    let args = vec!["--verbose"];
+    // value present → route not triggered → Ok
+    let args = vec!["--verbose", "true"];
     let result: Result<bool, &'static str> = args
         .with_route::<&'static str>()
         .pick(&arg![verbose: bool])
@@ -126,8 +126,8 @@ fn test_two_flags_second_missing_triggers_route() {
 
 #[test]
 fn test_two_flags_both_present_route_not_triggered() {
-    // Both flags present → route not triggered → Ok((true, true))
-    let args = vec!["--flag-a", "--flag-b"];
+    // Both values present → route not triggered → Ok((true, true))
+    let args = vec!["--flag-a", "true", "--flag-b", "true"];
     let result: Result<(bool, bool), &'static str> = args
         .with_route::<&'static str>()
         .pick(&arg![flag_a: bool])

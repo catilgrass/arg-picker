@@ -11,7 +11,18 @@ use std::{
 ///
 /// # Why not just `bool`?
 ///
-/// Unlike a raw `bool`, `Flag` carries **explicit semantics** about whether
+/// Since `bool` implements [`SinglePickable`] as an explicit-value type, it
+/// parses the strings `"true"` / `"false"` (case-insensitive) from the
+/// argument list rather than acting as a plain switch:
+///
+/// ```text
+/// --verbose true   // bool → true
+/// --verbose false  // bool → false
+/// --verbose        // bool does NOT match (no value is present)
+/// ```
+///
+/// If you want a boolean switch that is active whenever the flag is simply
+/// present, use `Flag`. `Flag` carries **explicit semantics** about whether
 /// the flag was actually provided by the user (`Active`) or simply omitted
 /// (`Inactive`). This distinction matters when you want to distinguish
 /// "the user intentionally omitted the flag" from "the flag was processed but
@@ -32,6 +43,7 @@ use std::{
 /// ```
 ///
 /// [`PickerArg`]: crate::PickerArg
+/// [`SinglePickable`]: crate::SinglePickable
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum Flag {
     /// The flag was **not** present on the command line.

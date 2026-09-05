@@ -31,7 +31,7 @@ let flag = arg![name: String, 'n', "nickname"];
 // Positional parameter
 let flag = arg![String];
 
-// Flag-only parameter (boolean)
+// Flag-only switch parameter
 let flag = arg![verbose: Flag];
 ```
 

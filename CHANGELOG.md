@@ -68,6 +68,8 @@ None
 
 1. **[`pickable`]** Renamed the `MultiPickableWithBoundary` trait to `MultiPickable`. All references to the old trait name — including its blanket impl for `Vec<T>`, all inherent implementations, and the `SinglePickable`-adjacent internal call sites in `pickable`, `value::vec_until`, and related modules — have been updated to the shortened `MultiPickable` name. Public API code referencing `MultiPickableWithBoundary` will fail to compile and must migrate to `MultiPickable`.
 
+2. **[`builtin:bool`]** Changed `bool` from a flag-only `Pickable` to an explicit-value [`SinglePickable`](https://docs.rs/arg-picker/latest/arg_picker/trait.SinglePickable.html). It now parses the case-insensitive strings `"true"` / `"false"` as a normal argument value. The old switch behavior is intentionally **not** preserved; users who need a present/absent boolean flag should use the existing `Flag` type instead.
+
 ---
 
 ## Contents
