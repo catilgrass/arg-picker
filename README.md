@@ -71,7 +71,7 @@ ParserStyle::set_global_style(&WINDOWS_STYLE);
 // After setting the style, calling Picker will parse arguments according to the specified rules
 ```
 
-## `Pickable` Derive (feature `derive`)
+### `Pickable` Derive (feature `derive`)
 
 Enable the optional `derive` feature to get `#[derive(Pickable)]`:
 
@@ -87,7 +87,7 @@ The derive macro is re-exported at the crate root, so it can be imported directl
 use arg_picker::Pickable;
 ```
 
-### Deriving for structs
+**1. Deriving for structs**
 
 For a named struct, `#[derive(Pickable)]` generates a `Pickable` implementation.
 A field without any `#[arg(...)]` helper is **positional**:
@@ -132,7 +132,7 @@ The generated `tag` phase is precise: each inner field only claims the arguments
 needs, so a derived composite can be combined with other `Pickable`s without
 stealing unrelated flags.
 
-### Deriving for enums
+**2. Deriving for enums**
 
 For a unit-only enum, `#[derive(Pickable)]` generates a `SinglePickable`
 implementation. User input is converted to `PascalCase` and matched against the

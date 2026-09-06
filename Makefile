@@ -1,7 +1,7 @@
 .PHONY: doc doc-preview build-picker build-test-crate build test-picker test-macros test-test-crate test clippy-picker clippy-macros clippy-test-crate clippy check
 
 doc:
-	cargo doc --no-deps
+	cargo doc --no-deps --features=derive
 
 doc-preview:
 	python3 -m http.server 3000
