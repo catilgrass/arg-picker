@@ -1,4 +1,6 @@
-.PHONY: doc doc-preview build-picker build-test-crate build test-picker test-macros test-test-crate test clippy-picker clippy-macros clippy-test-crate clippy check package
+.PHONY: doc doc-preview build-picker build-test-crate build test-picker test-macros test-test-crate test clippy-picker clippy-macros clippy-test-crate clippy check package release
+
+VERSION ?=
 
 doc:
 	cargo doc --no-deps --features=derive
@@ -40,5 +42,31 @@ package:
 	mkdir -p target
 	echo '[workspace]' > target/Cargo.toml
 	cargo package --workspace --allow-dirty
+
+release: package
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Error: VERSION is required. Usage: make release VERSION=x.y.z"; \
+		exit 1; \
+	fi
+
+	rm -f target/package/arg-picker-$(VERSION)/Cargo.toml.orig
+	rm -f target/package/arg-picker-macros-$(VERSION)/Cargo.toml.orig
+
+	rm -f target/package/arg-picker-$(VERSION)/Cargo.lock
+	rm -f target/package/arg-picker-macros-$(VERSION)/Cargo.lock
+
+	cd target/package/arg-picker-macros-$(VERSION) && cargo build --features=derive
+	cd target/package/arg-picker-macros-$(VERSION) && cargo test --features=derive
+	cd target/package/arg-picker-macros-$(VERSION) && cargo clippy -- -D warnings
+
+	cd target/package/arg-picker-macros-$(VERSION) && cargo publish --dry-run
+	cd target/package/arg-picker-macros-$(VERSION) && cargo publish
+
+	cd target/package/arg-picker-$(VERSION) && cargo build --features=derive
+	cd target/package/arg-picker-$(VERSION) && cargo test --features=derive
+	cd target/package/arg-picker-$(VERSION) && cargo clippy -- -D warnings
+
+	cd target/package/arg-picker-$(VERSION) && cargo publish --dry-run
+	cd target/package/arg-picker-$(VERSION) && cargo publish
 
 check: build test clippy
