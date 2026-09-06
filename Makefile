@@ -1,4 +1,4 @@
-.PHONY: doc doc-preview build-picker build-test-crate build test-picker test-macros test-test-crate test clippy-picker clippy-macros clippy-test-crate clippy check
+.PHONY: doc doc-preview build-picker build-test-crate build test-picker test-macros test-test-crate test clippy-picker clippy-macros clippy-test-crate clippy check package
 
 doc:
 	cargo doc --no-deps --features=derive
@@ -35,5 +35,10 @@ clippy-test-crate:
 	cargo clippy --manifest-path test/Cargo.toml --all-targets --all-features -- -D warnings
 
 clippy: clippy-picker clippy-macros clippy-test-crate
+
+package:
+	mkdir -p target
+	echo '[workspace]' > target/Cargo.toml
+	cargo package --workspace --allow-dirty
 
 check: build test clippy
