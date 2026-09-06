@@ -9,7 +9,7 @@ Any contributor making changes to the project must record their changes in this 
 ## TOC
 
 - [Unreleased](#unreleased)
-- [Release 0.3.0 (Unreleased)](#030-unreleased)
+- [Release 0.3.0 (2026-09-06)](#030-2026-09-06)
 - [Release 0.2.0 (2026-08-10)](#020-2026-08-10)
 
 ---
@@ -38,7 +38,7 @@ None
 
 ## Contents
 
-### 0.3.0 (Unreleased)
+### 0.3.0 (2026-09-06)
 
 First standalone release after [arg-picker](https://github.com/catilgrass/arg-picker) was migrated out of the [Mingling](https://github.com/mingling-rs/mingling) workspace.
 
