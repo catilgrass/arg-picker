@@ -9,12 +9,13 @@ Any contributor making changes to the project must record their changes in this 
 ## TOC
 
 - [Unreleased](#unreleased)
+- [Release 0.3.1 (Unreleased)](#031-unreleased)
 - [Release 0.3.0 (2026-09-06)](#030-2026-09-06)
 - [Release 0.2.0 (2026-08-10)](#020-2026-08-10)
 
----
-
 ## Contents
+
+---
 
 ### Unreleased
 
@@ -36,7 +37,25 @@ None
 
 ---
 
-## Contents
+### 0.3.1 (Unreleased)
+
+#### Fixes:
+
+None
+
+#### Optimizations:
+
+None
+
+#### Features:
+
+None
+
+#### **BREAKING CHANGES** (API CHANGES):
+
+None
+
+---
 
 ### 0.3.0 (2026-09-06)
 
@@ -73,8 +92,6 @@ None
 2. **[`builtin:bool`]** Changed `bool` from a flag-only `Pickable` to an explicit-value [`SinglePickable`](https://docs.rs/arg-picker/latest/arg_picker/trait.SinglePickable.html). It now parses the case-insensitive strings `"true"` / `"false"` as a normal argument value. The old switch behavior is intentionally **not** preserved; users who need a present/absent boolean flag should use the existing `Flag` type instead.
 
 ---
-
-## Contents
 
 ### 0.2.0 (2026-08-10)
 

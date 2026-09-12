@@ -24,7 +24,7 @@ fn expand(input: DeriveInput) -> syn::Result<TokenStream2> {
         Data::Enum(_) => expand_enum(input),
         Data::Union(_) => Err(syn::Error::new_spanned(
             &input.ident,
-            "pickialize can only be applied to structs or enums",
+            "derive can only be applied to structs or enums",
         )),
     }
 }
@@ -77,7 +77,9 @@ impl Parse for FieldArgItem {
             let content;
             bracketed!(content in input);
             let aliases = Punctuated::<LitStr, Token![,]>::parse_terminated(&content)?;
-            Ok(Self::Aliases(aliases.into_iter().map(|s| s.value()).collect()))
+            Ok(Self::Aliases(
+                aliases.into_iter().map(|s| s.value()).collect(),
+            ))
         } else {
             Err(syn::Error::new(
                 key.span(),
@@ -105,7 +107,8 @@ fn derived_short(ident: &Ident) -> char {
 }
 
 fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) -> TokenStream2 {
-    let has_options = options.short.is_some() || options.long.is_some() || !options.aliases.is_empty();
+    let has_options =
+        options.short.is_some() || options.long.is_some() || !options.aliases.is_empty();
     if !has_options {
         // Without any `#[arg(...)]` customization, the field is positional:
         // it expands to the same form as `arg![Type]`.
@@ -160,7 +163,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
         Fields::Unnamed(_) | Fields::Unit => {
             return Err(syn::Error::new_spanned(
                 &input.ident,
-                "pickialize structs must use named fields",
+                "derive structs must use named fields",
             ));
         }
     };
@@ -168,14 +171,14 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     if fields.len() > MAX_FIELDS {
         return Err(syn::Error::new_spanned(
             &input.ident,
-            format!("pickialize supports at most {MAX_FIELDS} fields"),
+            format!("derive supports at most {MAX_FIELDS} fields"),
         ));
     }
 
     if fields.is_empty() {
         return Err(syn::Error::new_spanned(
             &input.ident,
-            "pickialize structs require at least one field",
+            "derive structs require at least one field",
         ));
     }
 
@@ -198,7 +201,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     }
 
     let binding_names: Vec<_> = (0..field_infos.len())
-        .map(|i| format_ident!("__pickialize_{i}"))
+        .map(|i| format_ident!("__derive_{i}"))
         .collect();
     let field_idents: Vec<_> = field_infos.iter().map(|(ident, _, _)| ident).collect();
 
@@ -222,10 +225,10 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
         .enumerate()
         .map(|(i, (_, ty, _))| {
             let arg_expr = &arg_exprs[i];
-            let arg_var = format_ident!("__pickialize_field_arg_{i}");
-            let info_var = format_ident!("__pickialize_field_info_{i}");
-            let ctx_var = format_ident!("__pickialize_inner_ctx_{i}");
-            let tagged_var = format_ident!("__pickialize_tagged_{i}");
+            let arg_var = format_ident!("__derive_field_arg_{i}");
+            let info_var = format_ident!("__derive_field_info_{i}");
+            let ctx_var = format_ident!("__derive_inner_ctx_{i}");
+            let tagged_var = format_ident!("__derive_tagged_{i}");
             quote! {
                 {
                     let #arg_var = #arg_expr;
@@ -233,20 +236,20 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
                     let #ctx_var = ::arg_picker::TagPhaseContext {
                         arg_info: &#info_var,
                         args: ctx.args,
-                        mask: &__pickialize_mask,
+                        mask: &__derive_mask,
                     };
                     let #tagged_var = <#ty as ::arg_picker::Pickable>::tag(#ctx_var);
-                    for &__pickialize_idx in &#tagged_var {
-                        __pickialize_mask[__pickialize_idx] = 1;
+                    for &__derive_idx in &#tagged_var {
+                        __derive_mask[__derive_idx] = 1;
                     }
-                    __pickialize_tagged.extend(#tagged_var);
+                    __derive_tagged.extend(#tagged_var);
                 }
             }
         })
         .collect();
 
     let option_names: Vec<_> = (0..field_infos.len())
-        .map(|i| format_ident!("__pickialize_opt_{i}"))
+        .map(|i| format_ident!("__derive_opt_{i}"))
         .collect();
 
     let destructure = if field_infos.len() == 1 {
@@ -273,7 +276,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
 
     let original_generics = &input.generics;
     let ty_generics = original_generics.split_for_impl().1;
-    let pick_lifetime = Lifetime::new("'__pickialize", proc_macro2::Span::call_site());
+    let pick_lifetime = Lifetime::new("'__derive", proc_macro2::Span::call_site());
     let original_params = &original_generics.params;
     let impl_generics = if original_params.is_empty() {
         quote! { <#pick_lifetime> }
@@ -301,12 +304,12 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
             }
 
             fn tag(ctx: ::arg_picker::TagPhaseContext) -> ::std::vec::Vec<usize> {
-                let mut __pickialize_mask: ::std::vec::Vec<u8> = ctx.mask.to_vec();
-                let mut __pickialize_tagged: ::std::vec::Vec<usize> = ::std::vec::Vec::new();
+                let mut __derive_mask: ::std::vec::Vec<u8> = ctx.mask.to_vec();
+                let mut __derive_tagged: ::std::vec::Vec<usize> = ::std::vec::Vec::new();
 
                 #(#tag_blocks)*
 
-                __pickialize_tagged
+                __derive_tagged
             }
 
             fn pick(raw_strs: &[&str]) -> ::arg_picker::PickerArgResult<Self> {
@@ -333,7 +336,7 @@ fn expand_enum(input: DeriveInput) -> syn::Result<TokenStream2> {
     if enum_data.variants.is_empty() {
         return Err(syn::Error::new_spanned(
             enum_name,
-            "pickialize enums require at least one variant",
+            "derive enums require at least one variant",
         ));
     }
 
@@ -342,7 +345,7 @@ fn expand_enum(input: DeriveInput) -> syn::Result<TokenStream2> {
         if !matches!(variant.fields, Fields::Unit) {
             return Err(syn::Error::new_spanned(
                 &variant.ident,
-                "pickialize enum variants must not carry data",
+                "derive enum variants must not carry data",
             ));
         }
 

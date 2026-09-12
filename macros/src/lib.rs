@@ -4,9 +4,9 @@
 use proc_macro::TokenStream;
 
 mod arg;
-mod internal_repeat;
 #[cfg(feature = "derive")]
-mod pickialize;
+mod derive;
+mod internal_repeat;
 
 /// Core proc-macro: repeats a template body `count` times.
 ///
@@ -40,5 +40,5 @@ pub fn arg(input: TokenStream) -> TokenStream {
 #[cfg(feature = "derive")]
 #[proc_macro_derive(Pickable, attributes(arg))]
 pub fn derive_pickable(input: TokenStream) -> TokenStream {
-    pickialize::derive_pickable(input)
+    derive::derive_pickable(input)
 }
