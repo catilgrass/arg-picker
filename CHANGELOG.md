@@ -49,7 +49,13 @@ None
 
 #### Features:
 
-None
+1. **[`macros`]** Extended the `internal_repeat!` macro with two new expansion forms in the proc-macro internals (`macros/src/internal_repeat.rs`):
+
+    - **`ident$suffix`** — expands to `ident{current}suffix` (e.g. `With$Arg` → `With1Arg`). The suffix is only consumed when `$` is directly followed by an identifier, after `$+` / `$-` / `$^` are ruled out.
+    - **`(group,+)^`** — repeats `max - current` times (with separator), the complement of `+`. Used to pad a fixed-length parameter list with the parameters not consumed by this arity.
+
+    The repeat modifier after a parenthesized group is now computed as an explicit `(repeat_count, consumed)` pair, with `+` yielding `current + 1`, `-` yielding `current.saturating_sub(1)`, and `^` yielding `max.saturating_sub(current)`.
+
 
 #### **BREAKING CHANGES** (API CHANGES):
 

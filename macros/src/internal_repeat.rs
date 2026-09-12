@@ -99,6 +99,9 @@ fn parse_usize_tokens(tokens: &[&TokenTree]) -> usize {
 ///   `$+`  → current + 1 (clamped)
 ///   `$-`  → current - 1 (clamped)
 ///   `ident$` → ident{current}
+///   `ident$suffix` → ident{current}suffix (e.g. `With$Arg` → `With1Arg`).
+///                     The suffix is only consumed when `$` is directly
+///                     followed by an identifier (after `$+`/`$-`/`$^` are ruled out).
 /// and expanding `( … )+` / `( … ,)+` / `( … ;)+` groups.
 fn expand_body(tokens: &[TokenTree], current: usize, min: usize, max: usize) -> Vec<TokenTree> {
     let mut out = Vec::new();
@@ -151,6 +154,14 @@ fn expand_body(tokens: &[TokenTree], current: usize, min: usize, max: usize) -> 
                         }
                         TokenTree::Punct(p2) if p2.as_char() == '^' => {
                             let name = format!("{}{}", id, min);
+                            out.push(TokenTree::Ident(Ident::new(&name, id.span())));
+                            i += 3;
+                            continue;
+                        }
+                        // ident$suffix → {ident}{current}{suffix}
+                        // e.g. `With$Arg` → `With1Arg`
+                        TokenTree::Ident(suffix) => {
+                            let name = format!("{}{}{}", id, current, suffix);
                             out.push(TokenTree::Ident(Ident::new(&name, id.span())));
                             i += 3;
                             continue;
@@ -229,15 +240,18 @@ fn expand_body_vec(stream: &TokenStream, current: usize, min: usize, max: usize)
 /// - `(group +)`    — repeat `*` times, no separator
 /// - `(group,+)+`   — repeat `*+1` times (with separator)
 /// - `(group,+)--`   — repeat `*-1` times (with separator) [not yet used]
+/// - `(group,+)^`   — repeat `max - *` times (with separator); the complement,
+///   used to pad a fixed-length list with the items `*` does not produce.
 ///
-/// The `*` is the current counter value. An optional `+` or `-` immediately
-/// after the closing paren shifts the repeat count up or down by one.
+/// The `*` is the current counter value. An optional `+`, `-` or `^` immediately
+/// after the closing paren shifts the repeat count up/down by one, or makes it
+/// the complement of `max`.
 fn try_expand_paren_group(
     tokens: &[TokenTree],
     i: usize,
     current: usize,
     _min: usize,
-    _max: usize,
+    max: usize,
 ) -> Option<(Vec<TokenTree>, usize)> {
     let group = match tokens.get(i)? {
         TokenTree::Group(g) if g.delimiter() == Delimiter::Parenthesis => g,
@@ -292,13 +306,14 @@ fn try_expand_paren_group(
 
     // Handle modifier after `)`
     let rest = &tokens[i + 1..];
-    let modifier: isize = match rest.first() {
-        Some(TokenTree::Punct(p)) if p.as_char() == '+' => 1,
-        Some(TokenTree::Punct(p)) if p.as_char() == '-' => -1,
-        _ => 0,
+    let (repeat_count, consumed) = match rest.first() {
+        Some(TokenTree::Punct(p)) if p.as_char() == '+' => (current + 1, 2),
+        Some(TokenTree::Punct(p)) if p.as_char() == '-' => (current.saturating_sub(1), 2),
+        // `^` — repeat `max - current` times. Used to pad a fixed-length
+        // parameter list with the parameters not consumed by this arity.
+        Some(TokenTree::Punct(p)) if p.as_char() == '^' => (max.saturating_sub(current), 2),
+        _ => (current, 1),
     };
-    let consumed = if modifier != 0 { 2 } else { 1 };
-    let repeat_count = (current as isize + modifier) as usize;
 
     let mut out = Vec::new();
     for n in 1..=repeat_count {
