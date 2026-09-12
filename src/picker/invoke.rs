@@ -30,6 +30,12 @@ impl<'a> Picker<'a> {
     /// let sum = Picker::invoke(vec!["1", "2", "3"], |a: i32, b: i32, c: i32| a + b + c);
     /// assert_eq!(sum, 6);
     /// ```
+    ///
+    /// > ⚠️ Warning:
+    /// >
+    /// > Experimentation: `Picker::invoke` and the other shortcut
+    /// > entry points here are experimental, so their names, signatures and
+    /// > behavior may change in future releases.
     pub fn invoke<Arg, F, Marker>(args: Arg, func: F) -> F::Ret
     where
         Arg: IntoPicker<'a>,
@@ -51,6 +57,12 @@ impl<'a> Picker<'a> {
     /// ```
     ///
     /// See [`Picker::invoke`] for the positional-only and panic caveats.
+    ///
+    /// > ⚠️ Warning:
+    /// >
+    /// > Experimentation: `Picker::invoke_args` and the other
+    /// > shortcut entry points here are experimental, so their names,
+    /// > signatures and behavior may change in future releases.
     pub fn invoke_args<F, Marker>(func: F) -> F::Ret
     where
         F: IntoPickerFunction<'a, Marker>,
