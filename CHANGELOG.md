@@ -56,6 +56,17 @@ None
 
     The repeat modifier after a parenthesized group is now computed as an explicit `(repeat_count, consumed)` pair, with `+` yielding `current + 1`, `-` yielding `current.saturating_sub(1)`, and `^` yielding `max.saturating_sub(current)`.
 
+2. **[`func`]** Added a `func` module (re-exported at the crate root) providing a dynamically-dispatched callable type and the `Picker::invoke` entry points for invoking closures with anywhere from 1 to 32 arguments:
+
+    - **`PickerFunction<T0, …, T31, R>`** — an enum with one `WithNArg(Box<dyn FnOnce(...) -> R>)` variant per supported arity. Type parameters not consumed by a given arity are set to `()`. `PickerFunction::from` builds one directly from a closure, inferring the argument types and padding the remaining type parameters with `()`.
+    - **`IntoPickerFunction<'a, Args>`** — a hidden (per-arity) helper trait powering `PickerFunction::from`, `Picker::invoke`, and `Picker::invoke_args`. Since a 1-tuple, 2-tuple, … are distinct type constructors, the impls stay disjoint, letting a single `from`/`invoke` accept closures of any arity.
+    - **`Picker::invoke(args, func)`** — parses `args` as **positional** arguments in order, calls `func` with the parsed values, and returns `func`'s result. The argument types (and therefore the expected number of positional arguments) are inferred from `func`, with every remaining type parameter set to `()`; `func` may take between 1 and 32 arguments.
+    - **`Picker::invoke_args(func)`** (in the new `picker::invoke` module) — the “one-liner” form of `invoke`, taking its arguments from [`std::env::args`](https://doc.rust-lang.org/std/env/fn.args.html) while skipping the program name. Together with `invoke`, it provides a shortcut entry point for small scripts.
+
+    Both entry points are **positional-only** — flags, named arguments, defaults, and routes are not supported (use a `pick(..)` chain for those) — and panic if the positional arguments are missing or fail to parse.
+
+    Both the enum body and the per-arity impls are emitted with the `internal_repeat!` macro (using the `(group,+)^` complement repetition to pad the type parameters not consumed by each arity), and the `clippy::type_complexity` lint is allowed locally inside the module.
+
 
 #### **BREAKING CHANGES** (API CHANGES):
 

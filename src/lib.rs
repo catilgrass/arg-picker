@@ -19,6 +19,9 @@ pub use arg_picker_macros::Pickable;
 mod arg;
 pub use arg::*;
 
+mod func;
+pub use func::*;
+
 mod infos;
 pub use infos::*;
 
@@ -38,9 +41,9 @@ pub mod value;
 /// ```
 pub mod prelude {
     pub use crate::IntoPicker;
-    pub use crate::macros::arg;
     #[cfg(feature = "derive")]
     pub use crate::Pickable;
+    pub use crate::macros::arg;
 }
 
 /// Re-export of the `arg_picker_macros` crate

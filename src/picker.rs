@@ -8,6 +8,8 @@ pub use patterns::*;
 mod result;
 pub use result::*;
 
+mod invoke;
+
 use crate::{Pickable, PickerArg, PickerArgResult};
 
 /// The arg-picker's entry type
