@@ -9,7 +9,8 @@ Any contributor making changes to the project must record their changes in this 
 ## TOC
 
 - [Unreleased](#unreleased)
-- [Release 0.3.2 (Unreleased)](#031-unreleased)
+- [Release 0.3.3 (Unreleased)](#032-unreleased)
+- [Release 0.3.2 (2026-09-16)](#032-2026-09-16)
 - [Release 0.3.1 (2026-09-16)](#031-2026-09-16)
 - [Release 0.3.0 (2026-09-06)](#030-2026-09-06)
 - [Release 0.2.0 (2026-08-10)](#020-2026-08-10)
@@ -38,11 +39,16 @@ None
 
 ---
 
-### 0.3.2 (Unreleased)
+### 0.3.2 (2026-09-16)
 
 #### Fixes:
 
-None
+1. **[`package`]** Raised the required `arg-picker-macros` version to `0.3.2`, which 0.3.1 should have done. Its requirement was `0.3.0`, while the source it shipped required the `internal_repeat!` forms added in `arg-picker-macros` 0.3.1 — the `ident$suffix` identifier form and the `(group,·)^` complement repetition, both used by `func.rs` to emit `PickerFunction` and the per-arity `Picker::invoke` impls. Because `^0.3.0` is satisfied by `0.3.0`, Cargo never moved an existing lock off it: any project that had already resolved `arg-picker-macros` 0.3.0 kept it, and `arg-picker` then failed to compile with `expected one of ... found Arg` and `expected one of , or >, found ^` — errors pointing into the macro expansion rather than at anything the caller wrote.
+
+    - **[`Cargo.toml`]** `arg-picker-macros` is now required as `0.3.2`, the version released alongside this one, so the crate and the macro that expands its syntax can no longer be resolved apart.
+    - **[`macros`]** No change to the macro itself: this release only re-states the requirement 0.3.1 already relied on.
+
+    _A project that hit this can also work around it with `cargo update -p arg-picker-macros --precise 0.3.2`, which is worth doing regardless — it moves off the version whose syntax this crate does not match._
 
 #### Optimizations:
 
