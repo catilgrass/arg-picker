@@ -41,7 +41,12 @@ None
 
 #### Fixes:
 
-None
+1. **[`macros:derive`]** Fixed the `#[derive(Pickable)]` expansion to honour the `mingling_support` feature, which `arg!` already did. Every path the derive generated was hardcoded as `::arg_picker::`, so a crate that depends on Mingling alone could not use it: Mingling's `picker` feature enables `arg-picker/derive` and `arg-picker/mingling_support` and re-exports this crate as `mingling::picker`, yet the expanded `impl` still named `::arg_picker` — a crate that is not in the user's dependency graph, so the expansion failed to resolve.
+
+    - **[`macros`]** Added a single `picker_root()` helper in `macros/src/lib.rs` returning `::mingling::picker` under `mingling_support` and `::arg_picker` otherwise. Both `arg!` (`macros/src/arg.rs`) and the derive (`macros/src/derive.rs`) now build every generated path from it, so the two can no longer disagree about which crate they mean.
+    - **[`macros:derive`]** Routed every path the derive generates through that root: `PickerArg`, `IntoPicker`, `PickerArgInfo`, `TagPhaseContext`, `Pickable`, `PickerArgResult`, `PickerArgAttr`, `SinglePickable`, and `__private::to_pascal_case` — the last reached through Mingling's glob re-export of this crate.
+
+    _No change when `mingling_support` is off: the generated code still refers to `::arg_picker` itself._
 
 #### Optimizations:
 

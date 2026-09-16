@@ -69,11 +69,10 @@ pub(crate) fn arg(input: TokenStream) -> TokenStream {
             })
             .unwrap_or(TS2::new());
 
-        #[cfg(feature = "mingling_support")]
-        let import = quote! { ::mingling::picker::PickerArg };
-
-        #[cfg(not(feature = "mingling_support"))]
-        let import = quote! { ::arg_picker::PickerArg };
+        let import = {
+            let root = crate::picker_root();
+            quote! { #root::PickerArg }
+        };
 
         if ty.is_some() {
             quote! { #import::<#ty_ts> }

@@ -8,6 +8,24 @@ mod arg;
 mod derive;
 mod internal_repeat;
 
+/// Root path the generated code reaches `arg-picker` through.
+///
+/// With `mingling_support`, that is mingling's re-export of this crate, so a user who
+/// depends on mingling alone can use the macros; without it, it is `arg-picker`
+/// itself. Every generated path — in [`arg`] and in the `Pickable` derive — is built
+/// from this, so the two cannot disagree about which crate they mean.
+pub(crate) fn picker_root() -> proc_macro2::TokenStream {
+    #[cfg(feature = "mingling_support")]
+    {
+        quote::quote! { ::mingling::picker }
+    }
+
+    #[cfg(not(feature = "mingling_support"))]
+    {
+        quote::quote! { ::arg_picker }
+    }
+}
+
 /// Core proc-macro: repeats a template body `count` times.
 ///
 /// Internal call signature: `internal_repeat!(count => { template })`

@@ -107,13 +107,14 @@ fn derived_short(ident: &Ident) -> char {
 }
 
 fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) -> TokenStream2 {
+    let root = crate::picker_root();
     let has_options =
         options.short.is_some() || options.long.is_some() || !options.aliases.is_empty();
     if !has_options {
         // Without any `#[arg(...)]` customization, the field is positional:
         // it expands to the same form as `arg![Type]`.
         return quote! {
-            ::arg_picker::PickerArg::<#ty> {
+            #root::PickerArg::<#ty> {
                 full: &[],
                 short: ::std::option::Option::None,
                 positional: true,
@@ -143,7 +144,7 @@ fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) ->
     };
 
     quote! {
-        ::arg_picker::PickerArg::<#ty> {
+        #root::PickerArg::<#ty> {
             full: &[#(#full_lits),*],
             short: #short_expr,
             positional: false,
@@ -153,6 +154,7 @@ fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) ->
 }
 
 fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
+    let root = crate::picker_root();
     let struct_data = match &input.data {
         Data::Struct(data) => data,
         _ => unreachable!(),
@@ -214,7 +216,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     let rest_args = &arg_exprs[1..];
 
     let pick_chain = quote! {
-        ::arg_picker::IntoPicker::pick(raw_strs, &(#first_arg))
+        #root::IntoPicker::pick(raw_strs, &(#first_arg))
         #( .pick(&(#rest_args)) )*
     };
 
@@ -232,13 +234,13 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
             quote! {
                 {
                     let #arg_var = #arg_expr;
-                    let #info_var = ::arg_picker::PickerArgInfo::from(&#arg_var);
-                    let #ctx_var = ::arg_picker::TagPhaseContext {
+                    let #info_var = #root::PickerArgInfo::from(&#arg_var);
+                    let #ctx_var = #root::TagPhaseContext {
                         arg_info: &#info_var,
                         args: ctx.args,
                         mask: &__derive_mask,
                     };
-                    let #tagged_var = <#ty as ::arg_picker::Pickable>::tag(#ctx_var);
+                    let #tagged_var = <#ty as #root::Pickable>::tag(#ctx_var);
                     for &__derive_idx in &#tagged_var {
                         __derive_mask[__derive_idx] = 1;
                     }
@@ -258,7 +260,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
         quote! {
             let #option_name = #pick_chain.unpack();
             let Some(#binding) = #option_name else {
-                return ::arg_picker::PickerArgResult::NotFound;
+                return #root::PickerArgResult::NotFound;
             };
         }
     } else {
@@ -269,7 +271,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
         quote! {
             let (#(#option_names),*) = #pick_chain.unpack();
             let (#(#some_bindings),*) = (#(#option_names),*) else {
-                return ::arg_picker::PickerArgResult::NotFound;
+                return #root::PickerArgResult::NotFound;
             };
         }
     };
@@ -296,14 +298,14 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     };
 
     let impl_tokens = quote! {
-        impl #impl_generics ::arg_picker::Pickable<#pick_lifetime> for #struct_name #ty_generics #where_clause {
+        impl #impl_generics #root::Pickable<#pick_lifetime> for #struct_name #ty_generics #where_clause {
             fn get_attr(
-                _flag: &#pick_lifetime ::arg_picker::PickerArg<#pick_lifetime, Self>,
-            ) -> ::arg_picker::PickerArgAttr {
-                ::arg_picker::PickerArgAttr::Preprocess
+                _flag: &#pick_lifetime #root::PickerArg<#pick_lifetime, Self>,
+            ) -> #root::PickerArgAttr {
+                #root::PickerArgAttr::Preprocess
             }
 
-            fn tag(ctx: ::arg_picker::TagPhaseContext) -> ::std::vec::Vec<usize> {
+            fn tag(ctx: #root::TagPhaseContext) -> ::std::vec::Vec<usize> {
                 let mut __derive_mask: ::std::vec::Vec<u8> = ctx.mask.to_vec();
                 let mut __derive_tagged: ::std::vec::Vec<usize> = ::std::vec::Vec::new();
 
@@ -312,10 +314,10 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
                 __derive_tagged
             }
 
-            fn pick(raw_strs: &[&str]) -> ::arg_picker::PickerArgResult<Self> {
+            fn pick(raw_strs: &[&str]) -> #root::PickerArgResult<Self> {
                 #destructure
 
-                ::arg_picker::PickerArgResult::Parsed(Self {
+                #root::PickerArgResult::Parsed(Self {
                     #(#field_idents: #binding_names),*
                 })
             }
@@ -326,6 +328,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
 }
 
 fn expand_enum(input: DeriveInput) -> syn::Result<TokenStream2> {
+    let root = crate::picker_root();
     let enum_data = match &input.data {
         Data::Enum(data) => data,
         _ => unreachable!(),
@@ -352,7 +355,7 @@ fn expand_enum(input: DeriveInput) -> syn::Result<TokenStream2> {
         let variant_ident = &variant.ident;
         let pascal_name = just_fmt::pascal_case!(variant_ident.to_string());
         arms.push(quote! {
-            #pascal_name => ::arg_picker::PickerArgResult::Parsed(Self::#variant_ident),
+            #pascal_name => #root::PickerArgResult::Parsed(Self::#variant_ident),
         });
     }
 
@@ -377,16 +380,16 @@ fn expand_enum(input: DeriveInput) -> syn::Result<TokenStream2> {
     };
 
     let impl_tokens = quote! {
-        impl #impl_generics ::arg_picker::SinglePickable for #enum_name #ty_generics #where_clause {
-            fn pick_single(str: Option<&str>) -> ::arg_picker::PickerArgResult<Self> {
+        impl #impl_generics #root::SinglePickable for #enum_name #ty_generics #where_clause {
+            fn pick_single(str: Option<&str>) -> #root::PickerArgResult<Self> {
                 let Some(raw) = str else {
-                    return ::arg_picker::PickerArgResult::NotFound;
+                    return #root::PickerArgResult::NotFound;
                 };
 
-                let pascal = ::arg_picker::__private::to_pascal_case(raw);
+                let pascal = #root::__private::to_pascal_case(raw);
                 match pascal.as_str() {
                     #(#arms)*
-                    _ => ::arg_picker::PickerArgResult::NotFound,
+                    _ => #root::PickerArgResult::NotFound,
                 }
             }
         }
