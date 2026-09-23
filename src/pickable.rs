@@ -62,6 +62,9 @@ where
     /// This function receives a slice of the raw strings that were tagged in the `tag` step
     /// and converts them into an instance of `Self`.
     ///
+    /// Read this way the words are read as values, since the argument they are being read for
+    /// is not in hand: the picker itself calls [`pick_with`](Self::pick_with) instead.
+    ///
     /// # Parameters
     ///
     /// * `raw_strs` - A slice of strings containing the raw argument values to parse.
@@ -71,6 +74,33 @@ where
     /// Returns [`PickerArgResult<Self>`], i.e., the `Self` instance on success, or an appropriate
     /// error message on failure.
     fn pick(raw_strs: &[&str]) -> PickerArgResult<Self>;
+
+    /// Pick phase, with the marker of the argument being read for.
+    ///
+    /// The picker calls this rather than [`pick`](Self::pick), so that an implementation can
+    /// tell a value from a flag: what a word is depends on the argument it is being read for,
+    /// which is what the marker says. A word left alone in the tag where a value would have
+    /// been is the flag itself, and an argument that was named and given no value is not the
+    /// same as one that was not named at all — but only the argument in hand can say which of
+    /// its words that is.
+    ///
+    /// The default reads the tagged words as values, which is what an implementation with no
+    /// such distinction to make wants.
+    ///
+    /// # Parameters
+    ///
+    /// * `raw_strs` - A slice of strings containing the raw argument values to parse.
+    /// * `info` - The marker of the argument the words are being read for.
+    ///
+    /// # Returns
+    ///
+    /// Returns [`PickerArgResult<Self>`], i.e., the `Self` instance on success, or an appropriate
+    /// error message on failure.
+    #[must_use]
+    fn pick_with(raw_strs: &[&str], info: &PickerArgInfo) -> PickerArgResult<Self> {
+        let _ = info;
+        Self::pick(raw_strs)
+    }
 }
 
 /// Tag phase context, providing the necessary argument and state information for

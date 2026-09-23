@@ -1,5 +1,5 @@
 use arg_picker::value::{Flag, VecUntil};
-use arg_picker::{macros::arg, IntoPicker};
+use arg_picker::{IntoPicker, macros::arg};
 
 #[test]
 fn test_vec_until_i16_named() {
@@ -22,10 +22,22 @@ fn test_vec_until_i16_stops_at_non_number() {
 }
 
 #[test]
-fn test_vec_until_i16_empty() {
+fn test_vec_until_i16_absent_is_empty() {
+    let nums: VecUntil<i16> = Vec::<&str>::new()
+        .to_picker()
+        .pick(&arg![nums: VecUntil<i16>])
+        .or_default()
+        .unwrap();
+    assert!(nums.is_empty());
+}
+
+#[test]
+fn test_vec_until_i16_without_a_value_is_empty() {
+    // A list left without values is the list of none.
     let nums: VecUntil<i16> = vec!["--nums"]
         .to_picker()
         .pick(&arg![nums: VecUntil<i16>])
+        .or_default()
         .unwrap();
     assert!(nums.is_empty());
 }

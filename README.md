@@ -78,7 +78,7 @@ Enable the optional `derive` feature to get `#[derive(Pickable)]`:
 ```toml
 # Cargo.toml
 [dependencies]
-arg-picker = { version = "0.3", features = ["derive"] }
+arg-picker = { version = "0.4", features = ["derive"] }
 ```
 
 The derive macro is re-exported at the crate root, so it can be imported directly:

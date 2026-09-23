@@ -1,6 +1,6 @@
 use crate::{
     matcher_needed::*,
-    parselib::{build_possible_flags, seek_end_of_options},
+    parselib::{build_possible_flags, is_flag_like, seek_end_of_options},
 };
 
 /// `MultiArgMatcher` matches a named flag and **all** consecutive arguments
@@ -10,12 +10,20 @@ use crate::{
 /// This is the tag implementation for `Multi` and `GreedyMulti` types
 /// such as `Vec<String>` (`--files a.txt b.txt`).
 ///
+/// A flag followed by no value at all is tagged **on its own** — the same tag a flag with values
+/// gets, with none of the values — and what stops the collection is [`is_flag_like`], the same
+/// judgment the single-value matchers use: a word that names an option, or the end-of-options
+/// marker, is where the values of a flag end. A lone prefix (`-`) ends nothing: it is a value
+/// that happens to start with one.
+///
 /// # Behavior
 ///
 /// | Input | `on_match_all` |
 /// |-------|----------------|
 /// | `--val a b --val d e` | `[0, 1, 2, 5, 6]` (two groups) |
 /// | `--val=1 2` | `[0, 1]` (eq mode + one extra value) |
+/// | `--val` | `[0]` (tagged alone) |
+/// | `--val --other` | `[0]` (`--other` left for whatever names it) |
 ///
 /// Args after `--` are ignored.
 pub struct MultiArgMatcher;
@@ -65,8 +73,6 @@ impl Matcher for MultiArgMatcher {
         let possible_flags = build_possible_flags(style, arg_info);
         let end = seek_end_of_options(args, style);
         let sep = style.value_separator;
-        let is_flag =
-            |raw: &str| raw.starts_with(style.long_prefix) || raw.starts_with(style.short_prefix);
         let is_our_flag = |raw: &str| {
             possible_flags
                 .iter()
@@ -89,7 +95,7 @@ impl Matcher for MultiArgMatcher {
                     i += 1;
                     while i < args.len()
                         && end.is_none_or(|e| args[i].raw_idx < e)
-                        && !is_flag(args[i].raw)
+                        && !is_flag_like(args[i].raw, style)
                     {
                         result.push(args[i].raw_idx);
                         i += 1;
@@ -100,7 +106,7 @@ impl Matcher for MultiArgMatcher {
                 i += 1;
                 while i < args.len()
                     && end.is_none_or(|e| args[i].raw_idx < e)
-                    && !is_flag(args[i].raw)
+                    && !is_flag_like(args[i].raw, style)
                 {
                     result.push(args[i].raw_idx);
                     i += 1;

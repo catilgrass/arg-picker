@@ -52,6 +52,56 @@ pub fn seek_single<'a>(raw_strs: &'a [&'a str]) -> Option<&'a str> {
     }
 }
 
+/// Extract a single value, with the marker of the argument it is being read for.
+///
+/// As [`seek_single`], except that a **named** argument whose one tagged word is what a flag
+/// looks like has no value: the word is the flag itself, left in the tag because no value
+/// followed it. A positional argument is never read that way — after the end-of-options marker
+/// its value is allowed to look like anything.
+#[must_use]
+pub fn seek_single_with<'a>(raw_strs: &'a [&'a str], info: &PickerArgInfo) -> Option<&'a str> {
+    if let [only] = raw_strs {
+        let style = ParserStyle::global_style();
+
+        // An inline value is written with the flag, so a word that carries one is more than a
+        // flag and is read as such below.
+        if !info.positional && !only.contains(style.value_separator) && is_flag_like(only, style) {
+            return None;
+        }
+    }
+
+    seek_single(raw_strs)
+}
+
+/// Whether `raw` names an option rather than being a value.
+///
+/// A word that starts with the style's long or short prefix names an option, and the
+/// end-of-options marker is a boundary rather than a word of its own: neither is ever the value
+/// of a flag, so a flag that is followed by one was given none. A lone prefix — `-` — is not a
+/// flag: it is a value that happens to start with one, which is what a program that reads a lone
+/// `-` as its standard input is told.
+#[must_use]
+pub fn is_flag_like(raw: &str, style: &ParserStyle) -> bool {
+    let names_an_option = |prefix: &str| {
+        raw.strip_prefix(prefix)
+            .is_some_and(|name| !name.is_empty())
+    };
+
+    names_an_option(style.long_prefix)
+        || names_an_option(style.short_prefix)
+        || is_end_of_options(raw, style)
+}
+
+/// Whether `raw` is the style's end-of-options marker.
+#[must_use]
+fn is_end_of_options(raw: &str, style: &ParserStyle) -> bool {
+    if style.case_sensitive {
+        raw == style.end_of_options
+    } else {
+        raw.eq_ignore_ascii_case(style.end_of_options)
+    }
+}
+
 /// Seeks the index of the end-of-options marker (`--`) in the argument list.
 ///
 /// This function searches for the standard end-of-options separator (`--`)

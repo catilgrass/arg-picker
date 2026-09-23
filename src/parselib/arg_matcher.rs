@@ -1,6 +1,6 @@
 use crate::{
     matcher_needed::*,
-    parselib::{build_possible_flags, seek_end_of_options},
+    parselib::{build_possible_flags, is_flag_like, seek_end_of_options},
 };
 
 /// `ArgMatcher` is used for parameters that carry a single value.
@@ -8,10 +8,11 @@ use crate::{
 /// It handles two scenarios:
 ///
 /// **Named** — `--name Alice` or `--name=Alice`.
-///   Each flag occurrence consumes **one** following argument as its value,
-///   regardless of what it is (even if it looks like a flag).
-///   This ensures the mask correctly claims the value slot; validation is
-///   the `Pickable`'s responsibility.
+///   Each flag occurrence takes **one** following argument as its value, so long as that
+///   argument is a value: a word that names an option, or the end-of-options marker, is a word
+///   of its own rather than a value, and is left where it is. Taking it would swallow a flag of
+///   the same command, and the flag being matched would end up with a value it was never given —
+///   which is why `--name --other` leaves `--name` valueless instead of naming it `--other`.
 ///
 /// **Positional** — no flag prefix, matched by position.
 ///
@@ -21,6 +22,7 @@ use crate::{
 /// |-------|----------------|----------------|
 /// | `--name Alice` | `[0, 1]` (via Pickable tag) | `[0, 1]` |
 /// | `--name=Alice` | `[0]` | `[0]` |
+/// | `--name --other` | `[0]` | `[0]` |
 /// | `--val a --val b` | `[0, 1]` | `[0, 1, 2, 3]` |
 ///
 /// Args after `--` are ignored.
@@ -120,10 +122,15 @@ impl Matcher for ArgMatcher {
                 result.push(args[i].raw_idx);
 
                 if !Self::is_inline_value(args[i].raw, flag_str, sep) {
-                    if i + 1 < args.len()
-                        // Don't consume `--` (end-of-options marker) as a value.
-                        && end.is_none_or(|e| args[i + 1].raw_idx < e)
-                    {
+                    // The word after the flag is its value — but only when it is one. A word
+                    // that names an option, or the end-of-options marker, is not: taking it
+                    // would swallow a flag of the same command, and the flag being matched
+                    // would end up with a value it was never given.
+                    let takes_value = args.get(i + 1).is_some_and(|next| {
+                        end.is_none_or(|e| next.raw_idx < e) && !is_flag_like(next.raw, style)
+                    });
+
+                    if takes_value {
                         result.push(args[i + 1].raw_idx);
                         i += 2;
                         continue;

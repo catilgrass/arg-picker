@@ -1,10 +1,94 @@
-use arg_picker::parselib::{
-    build_possible_flags, FlagMatcher, Matcher, ParserStyle, ParserStyleNamingCase,
-    POWERSHELL_STYLE, UNIX_STYLE, WINDOWS_STYLE,
-};
 use arg_picker::PickerArgInfo;
+use arg_picker::parselib::{
+    ArgMatcher, FlagMatcher, Matcher, MultiArgMatcher, POWERSHELL_STYLE, ParserStyle,
+    ParserStyleNamingCase, UNIX_STYLE, WINDOWS_STYLE, build_possible_flags, is_flag_like,
+};
 
 use crate::make_masked;
+
+// Style: what a word is — a value, or an option
+
+#[test]
+fn test_is_flag_like_unix() {
+    assert!(is_flag_like("--name", &UNIX_STYLE));
+    assert!(is_flag_like("-n", &UNIX_STYLE));
+    assert!(is_flag_like("--", &UNIX_STYLE));
+    assert!(is_flag_like("--name=Alice", &UNIX_STYLE));
+    // A value written without the separator and starting with the prefix reads as an option.
+    assert!(is_flag_like("-5", &UNIX_STYLE));
+
+    // A lone prefix is a value that happens to start with one.
+    assert!(!is_flag_like("-", &UNIX_STYLE));
+    assert!(!is_flag_like("Alice", &UNIX_STYLE));
+    assert!(!is_flag_like("", &UNIX_STYLE));
+}
+
+#[test]
+fn test_is_flag_like_windows() {
+    assert!(is_flag_like("/Verbose", &WINDOWS_STYLE));
+    assert!(is_flag_like("--", &WINDOWS_STYLE));
+    // Windows flags are written with a slash, so a dash is not one ...
+    assert!(!is_flag_like("-Verbose", &WINDOWS_STYLE));
+    assert!(!is_flag_like("C:/Users/me", &WINDOWS_STYLE));
+    // ... while a rooted path is, and needs the separator to be given as a value.
+    assert!(is_flag_like("/Users/me", &WINDOWS_STYLE));
+}
+
+#[test]
+fn test_is_flag_like_powershell() {
+    assert!(is_flag_like("-Verbose", &POWERSHELL_STYLE));
+    assert!(is_flag_like("-5", &POWERSHELL_STYLE));
+    assert!(!is_flag_like("/Verbose", &POWERSHELL_STYLE));
+    assert!(!is_flag_like("-", &POWERSHELL_STYLE));
+}
+
+#[test]
+fn test_unix_style_takes_no_option_like_word_as_a_value() {
+    // `--name --other`: the second word names an option, so `--name` is given no value.
+    let mut info = PickerArgInfo::new();
+    info.set_long("name");
+
+    let args = vec![make_masked("--name", 0), make_masked("--other", 1)];
+    let result = ArgMatcher::on_match_all(&args, &UNIX_STYLE, &info);
+    assert_eq!(result, vec![0]);
+}
+
+#[test]
+fn test_windows_style_takes_no_option_like_word_as_a_value() {
+    // `/Name /Other`: the same, written the way Windows style writes it.
+    let mut info = PickerArgInfo::new();
+    info.set_long("name");
+
+    let args = vec![make_masked("/Name", 0), make_masked("/Other", 1)];
+    let result = ArgMatcher::on_match_all(&args, &WINDOWS_STYLE, &info);
+    assert_eq!(result, vec![0]);
+}
+
+#[test]
+fn test_windows_style_a_dash_word_is_a_value() {
+    // A dash is not a flag in Windows style, so the word after `/Name` is its value.
+    let mut info = PickerArgInfo::new();
+    info.set_long("name");
+
+    let args = vec![make_masked("/Name", 0), make_masked("-Alice", 1)];
+    let result = ArgMatcher::on_match_all(&args, &WINDOWS_STYLE, &info);
+    assert_eq!(result, vec![0, 1]);
+}
+
+#[test]
+fn test_windows_style_list_stops_at_its_own_prefix() {
+    // A slash word ends what a list collects, while a dash word is one of its values.
+    let mut info = PickerArgInfo::new();
+    info.set_long("files");
+
+    let args = vec![
+        make_masked("/Files", 0),
+        make_masked("-", 1),
+        make_masked("/Other", 2),
+    ];
+    let result = MultiArgMatcher::on_match_all(&args, &WINDOWS_STYLE, &info);
+    assert_eq!(result, vec![0, 1]);
+}
 
 // Style: formatting utilities
 

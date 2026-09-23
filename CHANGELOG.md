@@ -9,7 +9,7 @@ Any contributor making changes to the project must record their changes in this 
 ## TOC
 
 - [Unreleased](#unreleased)
-- [Release 0.3.3 (Unreleased)](#032-unreleased)
+- [Release 0.4.0 (Unreleased)](#040-unreleased)
 - [Release 0.3.2 (2026-09-16)](#032-2026-09-16)
 - [Release 0.3.1 (2026-09-16)](#031-2026-09-16)
 - [Release 0.3.0 (2026-09-06)](#030-2026-09-06)
@@ -36,6 +36,57 @@ None
 #### **BREAKING CHANGES** (API CHANGES):
 
 None
+
+---
+
+### Release 0.4.0 (Unreleased)
+
+#### Fixes:
+
+1. **[`parselib:matcher`]** Fixed named flags swallowing the flag that followed them as their value. A named argument takes the word after it as its value only when that word **is** a value; a word that names an option, or the end-of-options marker, is a word of its own and is left where it is. Previously `--name --other` paired `--name` with `--other`, so `--name` was given a value it was never given and `--other` could no longer be matched by whatever named it.
+
+    - **[`parselib:utils`]** Added `is_flag_like`, telling a word that names an option (`--` / `-` prefix followed by a non-empty name, or the end-of-options marker) from a plain value. A lone prefix (`-`) is **not** a flag — it is a value that happens to start with one.
+    - **[`parselib:arg_matcher`]** `ArgMatcher::on_match_all` now claims the word after a named flag only when `is_flag_like` says it is not a flag, so an option-like word is no longer consumed as a value.
+    - **[`parselib:single_matcher`]** `SingleMatcher::tag` pairs a flag with the word after it only when that word is a value. A named flag given no value is now kept **on its own** in the tag (previously it was dropped), so the pick phase can tell _named and unvalued_ from _not named at all_; a later flag in the same argument is left untagged.
+
+2. **[`pickable`]** Added the `Pickable::pick_with` method alongside `pick`, taking the [`PickerArgInfo`] of the argument being read for. What a word **is** depends on the argument it is being read for, so the picker now calls `pick_with` rather than `pick`. The default implementation ignores the marker and reads the tagged words as values, exactly as `pick` does.
+
+    - **[`parselib:utils`]** Added `seek_single_with`, which reads like `seek_single` but treats a named argument whose one tagged word is what a flag looks like — and which carries no inline value — as having no value. A positional argument is never read that way: after the end-of-options marker its value is allowed to look like anything.
+    - **[`pickable:single_pickable`]** `SinglePickable` now implements `pick_with` via `seek_single_with`, so a flag named but not valued fails as it would for any unparsable value instead of parsing the flag itself as its own value.
+    - **[`pickable:single_pickable`]** `SinglePickable` for `Option<S>` also overrides `pick_with`: nothing where a value would be — the argument not being given at all, or being named and left without a value — is `None`, while a word that **is** there is read exactly as `S` reads it, so one that does not parse is still a failure rather than an absence.
+    - **[`picker:parse`]** The generated pick phase now calls `T$::pick_with(args, &arg_infos[$-])` instead of `T$::pick(args)`, passing each argument its own marker.
+
+    _Test coverage: the `arg_matcher_test` case for a value that looks like a flag now expects `[0]` rather than `[0, 1]`, and a new `value_valueless_test` module covers valueless named arguments._
+
+3. **[`parselib:multi_arg_matcher`]** Where the words a list collects end is now the same judgment the single-value matchers use (`is_flag_like`): a word that names an option, or the end-of-options marker, ends them, while a lone prefix (`-`) does not — it is a value a list may hold. A flag followed by no value is tagged on its own.
+
+    What a named argument that is given no value reads as is therefore the type's own answer: a type that must have one fails, an optional one is `None`, and a list is the list of none — the same thing each of them reads as when it is not there at all. A **positional** argument is unchanged: after the end-of-options marker its words are values, whatever they look like.
+
+    _Test coverage: `value_valueless_test` covers the outcome each type declares for a named argument given no value, along with an absent argument, an empty inline value, a lone `-` a list holds, a word that looks like a flag needing the separator, and the flag after a valueless argument still being matched; `style_test` covers `is_flag_like` and the matcher guards in all three styles; `multi_value_test`'s "given no value" case expects the empty list._
+
+#### Optimizations:
+
+None
+
+#### Features:
+
+None
+
+#### **BREAKING CHANGES** (API CHANGES):
+
+1. **[`parselib:arg_matcher`]** **[`parselib:single_matcher`]** **[`parselib:multi_arg_matcher`]** A named parameter no longer takes a word that names an option as its value, which changes what several inputs mean. `--name --other` used to give `name` the value `"--other"`, leaving `--other` unmatchable; it now leaves `--name` without a value and `--other` free to be matched by whatever names it. The same holds for the end-of-options marker (`--name --`) and for a list (`--files --other`).
+
+    What a parameter that is left without a value reads as is its type's own answer, and each is the same thing that type reads as when it is not there at all:
+
+    - a type that must have a value — `T`, with no `Option` — **fails**, as it does when it is not given at all;
+    - an optional one — `Option<T>` — is `None`;
+    - a list — `Vec<T>` / `VecUntil<T>` — is the list of none.
+
+    **Migration**: a value that itself starts with the style's prefix must now be written with the separator — `--name=-5` rather than `--name -5`, or `/Name:/Users/me` rather than `/Name /Users/me` — or passed as a positional argument after the end-of-options marker. Code that relied on a following flag being read as the value should name the value it means instead.
+
+2. **[`pickable`]** The picker now calls `Pickable::pick_with` rather than `Pickable::pick`, so that an implementation can be told which argument the words are being read for. The new method is **additive** — its default forwards to `pick`, and `SinglePickable` implementors are unaffected — but an implementation of `Pickable` that expected `pick` to be the only pick phase will no longer be called by the picker, and one that reads a word differently depending on the argument it is read for must override `pick_with`.
+
+    **Migration**: nothing is required of an implementation that only has `pick`; an implementation that needs the argument it is being read for should override `pick_with` and read the tagged words from there.
 
 ---
 

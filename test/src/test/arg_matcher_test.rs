@@ -1,5 +1,5 @@
-use arg_picker::parselib::{ArgMatcher, Matcher, POWERSHELL_STYLE, UNIX_STYLE};
 use arg_picker::PickerArgInfo;
+use arg_picker::parselib::{ArgMatcher, Matcher, POWERSHELL_STYLE, UNIX_STYLE};
 
 use crate::make_args;
 
@@ -105,13 +105,13 @@ fn test_match_all_named_no_value() {
 
 #[test]
 fn test_match_all_named_value_looks_like_flag() {
-    // The next arg looks like a flag — still tag it.
-    // Validation is the Pickable's responsibility.
+    // The next arg names an option, so it is not taken as a value: the flag is tagged on its
+    // own, and the word it was not paired with is left where whatever names it can find it.
     let mut info = PickerArgInfo::new();
     info.set_long("name");
     let args = make_args(&[("--name", 0), ("--other", 1)]);
     let result = ArgMatcher::on_match_all(&args, &UNIX_STYLE, &info);
-    assert_eq!(result, vec![0, 1]);
+    assert_eq!(result, vec![0]);
 }
 
 // on_match_all — Named, multiple occurrences (Single per flag)

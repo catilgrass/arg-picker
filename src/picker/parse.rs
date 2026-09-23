@@ -154,7 +154,7 @@ internal_repeat!(1..=32 => {
 
                         // Pick Func
                         Box::new(|args, error_route| {
-                            self.result_$ = match T$::pick(args) {
+                            self.result_$ = match T$::pick_with(args, &arg_infos[$-]) {
                                 PickerArgResult::Parsed(mut value) => {
                                     // Postprocess
                                     if let Some(post) = self.post_$ {

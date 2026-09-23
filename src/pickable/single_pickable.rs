@@ -1,4 +1,7 @@
-use crate::{Pickable, PickerArg, PickerArgAttr, PickerArgResult, TagPhaseContext};
+use crate::{
+    Pickable, PickerArg, PickerArgAttr, PickerArgInfo, PickerArgResult, TagPhaseContext,
+    parselib::{seek_single, seek_single_with},
+};
 
 /// `SinglePickable` trait defines how to parse a type from a single command-line argument.
 ///
@@ -43,7 +46,11 @@ where
     }
 
     fn pick(raw_strs: &[&str]) -> PickerArgResult<Self> {
-        Self::pick_single(crate::parselib::seek_single(raw_strs))
+        Self::pick_single(seek_single(raw_strs))
+    }
+
+    fn pick_with(raw_strs: &[&str], info: &PickerArgInfo) -> PickerArgResult<Self> {
+        Self::pick_single(seek_single_with(raw_strs, info))
     }
 }
 
@@ -64,6 +71,25 @@ where
             PickerArgResult::Unparsed => PickerArgResult::Unparsed,
             PickerArgResult::Parsed(r) => PickerArgResult::Parsed(Some(r)),
             PickerArgResult::NotFound => PickerArgResult::Parsed(None),
+        }
+    }
+
+    /// Picks as the type inside is picked, except that **nothing where a value would be** is
+    /// `None`.
+    ///
+    /// An argument that was not given at all is nothing, and so is one that was named and left
+    /// without a value: a word that is not there is not a value whatever the type inside is. A
+    /// word that *is* there is read exactly as the type inside reads it, so one that does not
+    /// parse is still a failure rather than an absence.
+    fn pick_with(raw_strs: &[&str], info: &PickerArgInfo) -> PickerArgResult<Self> {
+        if seek_single_with(raw_strs, info).is_none() {
+            return PickerArgResult::Parsed(None);
+        }
+
+        match S::pick_with(raw_strs, info) {
+            PickerArgResult::Parsed(value) => PickerArgResult::Parsed(Some(value)),
+            PickerArgResult::Unparsed => PickerArgResult::Unparsed,
+            PickerArgResult::NotFound => PickerArgResult::NotFound,
         }
     }
 }
