@@ -39,7 +39,7 @@ pub fn internal_repeat(input: TokenStream) -> TokenStream {
 /// # Syntax
 ///
 /// ```ignore
-/// use arg_picker_macros::flag;
+/// use arg_picker_macros::arg;
 ///
 /// let basic = arg![name: String];
 /// let with_short_name = arg![name: String, 'n'];

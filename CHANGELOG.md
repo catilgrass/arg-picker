@@ -111,8 +111,9 @@ None
     }
     ```
 
+    - **[`picker`]** `UnmatchedArgs` keeps a copy of the complete argument list it was built from, exposed through `original()`. The indices of the entries point into that list, so a caller can show the original input next to the unmatched words. The program name is not part of it.
     - **[`picker`]** `UnmatchedArgs` converts into `PickerArgs`, keeping the words and dropping the positions. No conversion or iteration into `Vec<String>`, `Vec<&str>` or the words alone is provided, so losing the positions is always an explicit step.
-    - **[`pickable`]** Added `Pickable::pick_indexed`, which receives the tagged words together with the indices they were tagged at. Its default drops the indices and forwards to `pick_with`, so existing implementations are unchanged; the picker now calls it.
+    - **[`pickable`]** Added `Pickable::pick_indexed`, which receives the tagged words, the indices they were tagged at, and the complete `PickerArgs` they came from. Its default drops the positions and forwards to `pick_with`, so existing implementations are unchanged; the picker now calls it.
 
 #### **BREAKING CHANGES** (API CHANGES):
 

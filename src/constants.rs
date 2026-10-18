@@ -36,6 +36,7 @@ pub const REMAINS: PickerArg<PickerArgs> = PickerArg::<PickerArgs> {
 /// assert_eq!(unmatched.len(), 1);
 /// assert_eq!(unmatched.iter().next().unwrap().index, 2);
 /// assert_eq!(unmatched.iter().next().unwrap().raw, "stray");
+/// assert_eq!(unmatched.original().join(" "), "--name Alice stray");
 /// ```
 pub const UNMATCHED: PickerArg<UnmatchedArgs> = PickerArg::<UnmatchedArgs> {
     full: PickerNames::Borrowed(&[]),

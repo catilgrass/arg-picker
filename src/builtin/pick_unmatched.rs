@@ -1,7 +1,7 @@
 use crate::{
     PickerArgInfo,
     PickerArgResult::Parsed,
-    UnmatchedArg, UnmatchedArgs,
+    PickerArgs, UnmatchedArg, UnmatchedArgs,
     parselib::{ParserStyle, build_masked_args, seek_end_of_options},
     pickable_needed::*,
 };
@@ -24,7 +24,8 @@ impl<'a> Pickable<'a> for UnmatchedArgs {
     }
 
     fn pick(raw_strs: &[&str]) -> PickerArgResult<Self> {
-        // A direct call has no original list to point into, so positions are the slice's own.
+        // A direct call has no original list to point into, so positions and the copy are the
+        // slice's own.
         let entries = raw_strs
             .iter()
             .enumerate()
@@ -33,12 +34,14 @@ impl<'a> Pickable<'a> for UnmatchedArgs {
                 raw: raw.to_string(),
             })
             .collect();
-        Parsed(Self::new(entries))
+        let original = raw_strs.iter().map(ToString::to_string).collect();
+        Parsed(Self::new(entries, original))
     }
 
     fn pick_indexed(
         raw_strs: &[&str],
         indices: &[usize],
+        all_args: &PickerArgs<'a>,
         _info: &PickerArgInfo,
     ) -> PickerArgResult<Self> {
         let entries = raw_strs
@@ -49,6 +52,7 @@ impl<'a> Pickable<'a> for UnmatchedArgs {
                 raw: raw.to_string(),
             })
             .collect();
-        Parsed(Self::new(entries))
+        let original = all_args.iter().map(ToString::to_string).collect();
+        Parsed(Self::new(entries, original))
     }
 }

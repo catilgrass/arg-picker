@@ -26,6 +26,10 @@ fn test_unmatched_reports_words_and_positions() {
         .map(|entry| (entry.index, entry.raw.as_str()))
         .collect();
     assert_eq!(entries, vec![(2, "stray"), (3, "--unknown"), (4, "value")]);
+    assert_eq!(
+        unmatched.original().join(" "),
+        "--name Alice stray --unknown value"
+    );
 }
 
 #[test]
@@ -41,6 +45,8 @@ fn test_unmatched_does_not_report_the_end_of_options_marker() {
         .map(|entry| (entry.index, entry.raw.as_str()))
         .collect();
     assert_eq!(entries, vec![(3, "tail")]);
+    // The copy keeps the marker the entries leave out.
+    assert_eq!(unmatched.original().join(" "), "--name Alice -- tail");
 }
 
 #[test]

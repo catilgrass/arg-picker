@@ -110,13 +110,14 @@ where
     /// [`pick_with`](Self::pick_with) does. [`UnmatchedArgs`](crate::UnmatchedArgs) is the one that
     /// needs both: its entries pair each word with the index it was found at.
     ///
-    /// The indices follow `raw_strs` one for one, in the same order, and are indices into the
-    /// [`PickerArgs`](crate::PickerArgs) the picker was built from.
+    /// The indices follow `raw_strs` one for one, in the same order, and are indices into
+    /// `all_args`, the [`PickerArgs`](crate::PickerArgs) the picker was built from.
     ///
     /// # Parameters
     ///
     /// * `raw_strs` - A slice of strings containing the raw argument values to parse.
     /// * `indices` - The position each word of `raw_strs` was tagged at.
+    /// * `all_args` - The complete argument list, before any argument claimed a word.
     /// * `info` - The marker of the argument the words are being read for.
     ///
     /// # Returns
@@ -127,9 +128,10 @@ where
     fn pick_indexed(
         raw_strs: &[&str],
         indices: &[usize],
+        all_args: &PickerArgs<'a>,
         info: &PickerArgInfo,
     ) -> PickerArgResult<Self> {
-        let _ = indices;
+        let _ = (indices, all_args);
         Self::pick_with(raw_strs, info)
     }
 }

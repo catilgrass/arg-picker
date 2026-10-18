@@ -27,15 +27,28 @@ pub struct UnmatchedArg {
 /// lossy conversion is into [`PickerArgs`], which keeps the words and drops the positions; no
 /// conversion to `Vec<String>` or other word collections is provided, so the choice to drop the
 /// positions is made explicitly.
+///
+/// The complete argument list the picker was built from is kept as well, so a caller can show the
+/// original input next to the positions in the entries.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct UnmatchedArgs {
     entries: Vec<UnmatchedArg>,
+    original: Vec<String>,
 }
 
 impl UnmatchedArgs {
-    /// Builds the value from entries the pick phase produced.
-    pub(crate) const fn new(entries: Vec<UnmatchedArg>) -> Self {
-        Self { entries }
+    /// Builds the value from entries the pick phase produced and the list they point into.
+    pub(crate) const fn new(entries: Vec<UnmatchedArg>, original: Vec<String>) -> Self {
+        Self { entries, original }
+    }
+
+    /// Returns the complete argument list the picker was built from, before any matching.
+    ///
+    /// The program name is not part of it, and the list is copied, so it does not borrow from the
+    /// parse. The indices of [`UnmatchedArg`] are positions in this list.
+    #[must_use]
+    pub fn original(&self) -> &[String] {
+        &self.original
     }
 
     /// Returns the number of unmatched arguments.
