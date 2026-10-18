@@ -101,6 +101,37 @@ where
         let _ = info;
         Self::pick(raw_strs)
     }
+
+    /// Pick phase, with the positions the words were tagged at.
+    ///
+    /// The picker calls this rather than [`pick_with`](Self::pick_with), so that an implementation
+    /// can report where a word came from as well as what it is. A type that has no use for the
+    /// positions — most of them — keeps the default, which drops them and reads the words as
+    /// [`pick_with`](Self::pick_with) does. [`UnmatchedArgs`](crate::UnmatchedArgs) is the one that
+    /// needs both: its entries pair each word with the index it was found at.
+    ///
+    /// The indices follow `raw_strs` one for one, in the same order, and are indices into the
+    /// [`PickerArgs`](crate::PickerArgs) the picker was built from.
+    ///
+    /// # Parameters
+    ///
+    /// * `raw_strs` - A slice of strings containing the raw argument values to parse.
+    /// * `indices` - The position each word of `raw_strs` was tagged at.
+    /// * `info` - The marker of the argument the words are being read for.
+    ///
+    /// # Returns
+    ///
+    /// Returns [`PickerArgResult<Self>`], i.e., the `Self` instance on success, or an appropriate
+    /// error message on failure.
+    #[must_use]
+    fn pick_indexed(
+        raw_strs: &[&str],
+        indices: &[usize],
+        info: &PickerArgInfo,
+    ) -> PickerArgResult<Self> {
+        let _ = indices;
+        Self::pick_with(raw_strs, info)
+    }
 }
 
 /// Tag phase context, providing the necessary argument and state information for

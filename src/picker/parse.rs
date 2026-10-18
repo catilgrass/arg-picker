@@ -131,7 +131,7 @@ internal_repeat!(1..=32 => {
                     Box<dyn FnOnce(&PickerArgs<'a>, &[u8]) -> Vec<usize>>,
 
                     // Pick Func
-                    Box<dyn FnOnce(&[&str], &mut Option<Route>)>,
+                    Box<dyn FnOnce(&[&str], &[usize], &mut Option<Route>)>,
 
                     // Index
                     usize
@@ -153,8 +153,8 @@ internal_repeat!(1..=32 => {
                         }),
 
                         // Pick Func
-                        Box::new(|args, error_route| {
-                            self.result_$ = match T$::pick_with(args, &arg_infos[$-]) {
+                        Box::new(|args, indices, error_route| {
+                            self.result_$ = match T$::pick_indexed(args, indices, &arg_infos[$-]) {
                                 PickerArgResult::Parsed(mut value) => {
                                     // Postprocess
                                     if let Some(post) = self.post_$ {
@@ -202,17 +202,20 @@ internal_repeat!(1..=32 => {
 
                 // Tag phase
                 let tagged = tag_func(&self.args, mask.as_slice());
-                let mut args_to_pick: Vec<&str> = vec![];
-
-                for i in tagged {
-                    mask[i] = 1;
-
-                    // Update args to pick
-                    args_to_pick.push(self.args.get(i).unwrap_or_default());
-                }
+                let args_to_pick: Vec<&str> = tagged
+                    .iter()
+                    .map(|&i| {
+                        mask[i] = 1;
+                        self.args.get(i).unwrap_or_default()
+                    })
+                    .collect();
 
                 // Pick phase
-                pick_func(args_to_pick.as_slice(), &mut self.error_route);
+                pick_func(
+                    args_to_pick.as_slice(),
+                    tagged.as_slice(),
+                    &mut self.error_route,
+                );
             }
 
             // Combine Result

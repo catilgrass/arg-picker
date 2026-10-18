@@ -9,4 +9,5 @@ mod pick_pathbuf;
 mod pick_paths;
 mod pick_picker_args;
 mod pick_socket_attr;
+mod pick_unmatched;
 mod pick_string;

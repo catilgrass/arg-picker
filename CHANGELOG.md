@@ -99,6 +99,21 @@ None
 
     The `pick_or` family no longer has the closure type as a generic parameter, so the turbofish names only the value type: `pick_or::<String>(arg, || "aaa")`. Previously `pick_or::<String>` was rejected because `pick_or` took a second type parameter for the closure.
 
+4. **[`picker`]** Added `UnmatchedArgs` and `UnmatchedArg`, picked through the `consts::UNMATCHED` meta-argument. Each entry keeps the word no pick claimed together with the index it held in `PickerArgs`, so a caller can report what was unexpected and where it was. The entries are in argument order, the end-of-options marker is omitted, and the value iterates as `UnmatchedArg` (or `&UnmatchedArg` through a reference).
+
+    ```rust
+    let (name, unmatched): (String, UnmatchedArgs) = args
+        .pick(arg![name: String])
+        .pick(&UNMATCHED)
+        .unwrap();
+    for entry in &unmatched {
+        eprintln!("unexpected argument #{}: {}", entry.index, entry.raw);
+    }
+    ```
+
+    - **[`picker`]** `UnmatchedArgs` converts into `PickerArgs`, keeping the words and dropping the positions. No conversion or iteration into `Vec<String>`, `Vec<&str>` or the words alone is provided, so losing the positions is always an explicit step.
+    - **[`pickable`]** Added `Pickable::pick_indexed`, which receives the tagged words together with the indices they were tagged at. Its default drops the indices and forwards to `pick_with`, so existing implementations are unchanged; the picker now calls it.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`picker`]** The `pick` family's argument changed from `impl Into<&'a PickerArg<'a, N>>` to `impl Into<PickerArg<'a, N>>`. Passing `arg![...]` or `&arg![...]` still compiles, but a custom implementation of `Into<&PickerArg>` is no longer accepted; implement `Into<PickerArg>` instead.
