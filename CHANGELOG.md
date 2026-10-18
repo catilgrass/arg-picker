@@ -115,6 +115,23 @@ None
     - **[`picker`]** `UnmatchedArgs` converts into `PickerArgs`, keeping the words and dropping the positions. No conversion or iteration into `Vec<String>`, `Vec<&str>` or the words alone is provided, so losing the positions is always an explicit step.
     - **[`pickable`]** Added `Pickable::pick_indexed`, which receives the tagged words, the indices they were tagged at, and the complete `PickerArgs` they came from. Its default drops the positions and forwards to `pick_with`, so existing implementations are unchanged; the picker now calls it.
 
+5. **[`report`]** Added `UnmatchedReporter` and `UnmatchedArgs::report::<R>()`, which constructs the reporter with `Default` and hands it the unmatched arguments. Both return `bool`: `true` when the reporter produced a report and `false` when it did not, so an empty `UnmatchedArgs` can be told apart from one that was printed. The trait's default implementation reports nothing and returns `false`.
+
+    ```rust
+    unmatched.report::<AnnotateSnippetsReporter>();
+    ```
+
+    - **[`report`]** Added the `reporters` feature and `AnnotateSnippetsReporter`, backed by `annotate-snippets`. It renders the original argument list on one line and marks every unmatched word at the position it held, as an English-language diagnostic:
+
+        ```text
+         --> Unmatched arguments
+          |
+          | --name A --bill
+          |          ^^^^^^ unexpected argument
+        ```
+
+        There is no `error:` level, source path or line-number column. Color follows the environment: `NO_COLOR`, `CLICOLOR_FORCE`, `CLICOLOR`, `TERM=dumb`, and whether standard error is a terminal. `render` chooses automatically, `render_with(unmatched, color)` decides explicitly, and `report` writes to standard error; an empty `UnmatchedArgs` produces no output.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`picker`]** The `pick` family's argument changed from `impl Into<&'a PickerArg<'a, N>>` to `impl Into<PickerArg<'a, N>>`. Passing `arg![...]` or `&arg![...]` still compiles, but a custom implementation of `Into<&PickerArg>` is no longer accepted; implement `Into<PickerArg>` instead.

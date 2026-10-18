@@ -14,8 +14,10 @@ categories = ["command-line-interface", "parser-implementations"]
 default = []
 mingling_support = ["arg-picker-macros/mingling_support"]
 derive = ["arg-picker-macros/derive"]
+reporters = ["dep:annotate-snippets"]
 
 [dependencies]
+annotate-snippets = { workspace = true, optional = true }
 arg-picker-macros.workspace = true
 just_fmt.workspace = true
 
@@ -31,6 +33,7 @@ authors = ["Weicao-CatilGrass"]
 
 [workspace.dependencies]
 arg-picker-macros = { path = "./macros", version = "0.4.0" }
+annotate-snippets = "0.12.16"
 syn = { version = "3.0.5", features = ["full", "visit-mut"] }
 quote = "1.0.47"
 proc-macro2 = "1.0.107"

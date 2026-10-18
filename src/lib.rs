@@ -10,6 +10,9 @@ mod builtin;
 mod picker;
 pub use picker::*;
 
+mod report;
+pub use report::*;
+
 mod unmatched;
 pub use unmatched::*;
 

@@ -7,6 +7,7 @@ mod pickable_test;
 mod picker_arg_test;
 mod pos_matcher_test;
 mod priority_test;
+mod reporter_test;
 mod route_test;
 mod style_test;
 mod unmatched_test;
