@@ -19,6 +19,25 @@ internal_repeat!(1..=32 => {
     }
 });
 
+/// A closure used as a fallback value or route.
+///
+/// Implemented for every `FnMut() -> R` where `R: Into<T>`, so a fallback may return any type
+/// that converts into the expected one: `|| "aaa"` works where `String` is expected.
+pub trait Fallback<T> {
+    /// Produces the fallback value.
+    fn fallback(&mut self) -> T;
+}
+
+impl<T, R, F> Fallback<T> for F
+where
+    F: FnMut() -> R,
+    R: Into<T>,
+{
+    fn fallback(&mut self) -> T {
+        self().into()
+    }
+}
+
 internal_repeat!(1..=32 => {
     impl<'a, (T$,+), Route> PickerPattern$<'a, (T$,+), Route>
     where (T$: Pickable<'a>,+)
@@ -26,16 +45,14 @@ internal_repeat!(1..=32 => {
         /// Sets a default value provider for this arg.
         ///
         /// If the arg is not provided by the user at runtime, the given closure will be
-        /// called to produce a default value. The closure is expected to return `T$`.
+        /// called to produce a default value. The closure may return any type that converts
+        /// into `T$`, so `|| "aaa"` works where `String` is expected.
         ///
         /// # Example
         ///
         #[allow(clippy::type_complexity)]
-        pub fn or<F>(mut self, func: F) -> Self
-        where
-            F: 'static + FnMut() -> T$,
-        {
-            self.default_$ = Some(Box::new(func));
+        pub fn or(mut self, mut func: impl Fallback<T$> + 'static) -> Self {
+            self.default_$ = Some(Box::new(move || func.fallback()));
             self
         }
 
@@ -58,15 +75,13 @@ internal_repeat!(1..=32 => {
         /// Sets a route for when the arg is not provided.
         ///
         /// If the arg is not provided by the user at runtime, the given closure will be
-        /// called to produce a route value that will be returned early.
+        /// called to produce a route value that will be returned early. The closure may return
+        /// any type that converts into `Route`.
         ///
         /// # Example
         ///
-        pub fn or_route<F>(mut self, func: F) -> Self
-        where
-            F: 'static + FnMut() -> Route,
-        {
-            self.route_$ = Some(Box::new(func));
+        pub fn or_route(mut self, mut func: impl Fallback<Route> + 'static) -> Self {
+            self.route_$ = Some(Box::new(move || func.fallback()));
             self
         }
 
@@ -160,10 +175,13 @@ internal_repeat!(1..32 => {
        /// # Example
        ///
        #[allow(clippy::type_complexity)]
-       pub fn pick_or<N, F>(self, arg: impl Into<PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick_or<N>(
+           self,
+           arg: impl Into<PickerArg<'a, N>>,
+           func: impl Fallback<N> + 'static,
+       ) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a>,
-           F: FnMut() -> N + 'static,
        {
            self.pick(arg).or(func)
        }
@@ -189,10 +207,13 @@ internal_repeat!(1..32 => {
        /// # Example
        ///
        #[allow(clippy::type_complexity)]
-       pub fn pick_or_route<N, F>(self, arg: impl Into<PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick_or_route<N>(
+           self,
+           arg: impl Into<PickerArg<'a, N>>,
+           func: impl Fallback<Route> + 'static,
+       ) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a>,
-           F: FnMut() -> Route + 'static,
        {
            self.pick(arg).or_route(func)
        }

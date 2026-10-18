@@ -1,5 +1,6 @@
 mod arg_matcher_test;
 mod basic_test;
+mod fallback_test;
 mod multi_arg_test;
 mod multi_value_test;
 mod pickable_test;

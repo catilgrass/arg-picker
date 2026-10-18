@@ -95,6 +95,10 @@ None
     - **[`arg`]** Added `PickerNames` and its `as_slice`/`is_empty` accessors. `PickerArg::full` is now of that type, and `full()` returns `&[&'a str]` rather than `&'a [&'a str]` because an inline value borrows from the argument itself.
     - **[`arg`]** `PickerArg::new` still takes a slice; `set_full`/`with_full`/`without_full` wrap it in `PickerNames::Borrowed`.
 
+3. **[`picker`]** The `or` family now accepts a closure returning any type convertible into the expected one, through the new [`Fallback`] trait. So `.or(|| "aaa")` works where `String` is expected, and `.or_route(|| "route")` works where the route is a `String`.
+
+    The `pick_or` family no longer has the closure type as a generic parameter, so the turbofish names only the value type: `pick_or::<String>(arg, || "aaa")`. Previously `pick_or::<String>` was rejected because `pick_or` took a second type parameter for the closure.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`picker`]** The `pick` family's argument changed from `impl Into<&'a PickerArg<'a, N>>` to `impl Into<PickerArg<'a, N>>`. Passing `arg![...]` or `&arg![...]` still compiles, but a custom implementation of `Into<&PickerArg>` is no longer accepted; implement `Into<PickerArg>` instead.

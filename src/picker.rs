@@ -308,15 +308,15 @@ impl<'a, Route> Picker<'a, Route> {
     }
 
     /// Creates a `PickerPattern1` from the given arg.
-    /// If parsing fails, attempts the fallback arg.
-    pub fn pick_or<N, F>(
+    /// If parsing fails, uses the value produced by `or_arg`; it may return any type that
+    /// converts into `N`.
+    pub fn pick_or<N>(
         self,
         arg: impl Into<PickerArg<'a, N>>,
-        or_arg: F,
+        or_arg: impl Fallback<N> + 'static,
     ) -> PickerPattern1<'a, N, Route>
     where
         N: Pickable<'a>,
-        F: FnMut() -> N + 'static,
     {
         self.pick(arg).or(or_arg)
     }
@@ -334,15 +334,15 @@ impl<'a, Route> Picker<'a, Route> {
     }
 
     /// Creates a `PickerPattern1` from the given arg.
-    /// If parsing fails, switches to the given error route.
-    pub fn pick_or_route<N, F>(
+    /// If parsing fails, switches to the route produced by `error_route`; it may return any type
+    /// that converts into `Route`.
+    pub fn pick_or_route<N>(
         self,
         arg: impl Into<PickerArg<'a, N>>,
-        error_route: F,
+        error_route: impl Fallback<Route> + 'static,
     ) -> PickerPattern1<'a, N, Route>
     where
         N: Pickable<'a>,
-        F: FnMut() -> Route + 'static,
     {
         self.pick(arg).or_route(error_route)
     }
@@ -397,16 +397,16 @@ pub trait IntoPicker<'a> {
     /// # Parameters
     ///
     /// * `arg` — The argument definition, typically obtained from [`crate::macros::arg`].
-    /// * `func` — A closure that provides a default value if the arg is not provided by the user.
-    fn pick_or<Next, F>(
+    /// * `func` — A closure that provides a default value if the arg is not provided by the user;
+    ///   it may return any type that converts into `Next`.
+    fn pick_or<Next>(
         self,
         arg: impl Into<PickerArg<'a, Next>>,
-        func: F,
+        func: impl Fallback<Next> + 'static,
     ) -> PickerPattern1<'a, Next, ()>
     where
         Self: Sized,
         Next: Pickable<'a> + Sized,
-        F: FnMut() -> Next + 'static,
     {
         self.pick(arg).or(func)
     }
@@ -444,16 +444,16 @@ pub trait IntoPicker<'a> {
     /// # Parameters
     ///
     /// * `arg` — The argument definition, typically obtained from [`crate::macros::arg`].
-    /// * `func` — A closure that produces a route value if the arg is not provided by the user.
-    fn pick_or_route<Next, F, Route>(
+    /// * `func` — A closure that produces a route value if the arg is not provided by the user;
+    ///   it may return any type that converts into `Route`.
+    fn pick_or_route<Next, Route>(
         self,
         arg: impl Into<PickerArg<'a, Next>>,
-        func: F,
+        func: impl Fallback<Route> + 'static,
     ) -> PickerPattern1<'a, Next, Route>
     where
         Self: Sized,
         Next: Pickable<'a> + Sized,
-        F: FnMut() -> Route + 'static,
     {
         self.pick(arg).with_route::<Route>().or_route(func)
     }
