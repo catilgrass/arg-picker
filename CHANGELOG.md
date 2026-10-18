@@ -70,11 +70,22 @@ None
 
 #### Features:
 
-None
+1. **[`picker`]** The `pick` family now takes `impl Into<PickerArg<'a, N>>` instead of `impl Into<&'a PickerArg<'a, N>>`: `IntoPicker::pick`/`pick_or`/`pick_or_default`/`pick_or_route`, `Picker::pick`/`pick_or`/`pick_or_default`/`pick_or_route`, every `PickerPatternN::pick`/`pick_or`/`pick_or_default`/`pick_or_route`, and `Picker::build_pattern1`. The `arg![...]` expression can therefore be passed as it is, which is what the derive expansion and the examples now do. A reference still works, and any type implementing `From<T> for PickerArg` joins in through the same parameter.
+
+    - **[`picker`]** The pick chain stores each `PickerArg` by value rather than holding a `&'a` reference to it, so a temporary `arg![...]` no longer has to outlive the parse.
+    - **[`arg`]** `From<&PickerArg> for PickerArg` now takes the reference and the definition as independent lifetimes, so a local definition borrowed for a short time can be copied. `From<&PickerArg> for PickerArgInfo` is relaxed the same way.
 
 #### **BREAKING CHANGES** (API CHANGES):
 
-1. **[`parselib:arg_matcher`]** **[`parselib:single_matcher`]** **[`parselib:multi_arg_matcher`]** A named parameter no longer takes a word that names an option as its value, which changes what several inputs mean. `--name --other` used to give `name` the value `"--other"`, leaving `--other` unmatchable; it now leaves `--name` without a value and `--other` free to be matched by whatever names it. The same holds for the end-of-options marker (`--name --`) and for a list (`--files --other`).
+1. **[`picker`]** The `pick` family's argument changed from `impl Into<&'a PickerArg<'a, N>>` to `impl Into<PickerArg<'a, N>>`. Passing `arg![...]` or `&arg![...]` still compiles, but a custom implementation of `Into<&PickerArg>` is no longer accepted; implement `Into<PickerArg>` instead.
+
+    **Migration**: drop the `&` and pass `arg![...]` by value. With the new parameter the borrow is no longer needed, so Clippy reports `needless_borrows_for_generic_args` on `&arg![...]`; a project that denies warnings (`-D warnings`) fails on code that still compiles. A definition that is deliberately reused — and so cannot be moved into more than one `pick` — may keep the borrow and allow that lint at the call site, since `&PickerArg` still converts.
+
+2. **[`pickable`]** `Pickable::get_attr` now takes `&PickerArg<'a, Self>` rather than `&'a PickerArg<'a, Self>`, because the definition is owned by the pick chain instead of borrowed from outside it.
+
+    **Migration**: implementations of `get_attr` drop the lifetime from the reference, e.g. `fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr`.
+
+3. **[`parselib:arg_matcher`]** **[`parselib:single_matcher`]** **[`parselib:multi_arg_matcher`]** A named parameter no longer takes a word that names an option as its value, which changes what several inputs mean. `--name --other` used to give `name` the value `"--other"`, leaving `--other` unmatchable; it now leaves `--name` without a value and `--other` free to be matched by whatever names it. The same holds for the end-of-options marker (`--name --`) and for a list (`--files --other`).
 
     What a parameter that is left without a value reads as is its type's own answer, and each is the same thing that type reads as when it is not there at all:
 
@@ -84,7 +95,7 @@ None
 
     **Migration**: a value that itself starts with the style's prefix must now be written with the separator — `--name=-5` rather than `--name -5`, or `/Name:/Users/me` rather than `/Name /Users/me` — or passed as a positional argument after the end-of-options marker. Code that relied on a following flag being read as the value should name the value it means instead.
 
-2. **[`pickable`]** The picker now calls `Pickable::pick_with` rather than `Pickable::pick`, so that an implementation can be told which argument the words are being read for. The new method is **additive** — its default forwards to `pick`, and `SinglePickable` implementors are unaffected — but an implementation of `Pickable` that expected `pick` to be the only pick phase will no longer be called by the picker, and one that reads a word differently depending on the argument it is read for must override `pick_with`.
+4. **[`pickable`]** The picker now calls `Pickable::pick_with` rather than `Pickable::pick`, so that an implementation can be told which argument the words are being read for. The new method is **additive** — its default forwards to `pick`, and `SinglePickable` implementors are unaffected — but an implementation of `Pickable` that expected `pick` to be the only pick phase will no longer be called by the picker, and one that reads a word differently depending on the argument it is read for must override `pick_with`.
 
     **Migration**: nothing is required of an implementation that only has `pick`; an implementation that needs the argument it is being read for should override `pick_with` and read the tagged words from there.
 
@@ -149,7 +160,6 @@ None
     Both entry points are **positional-only** — flags, named arguments, defaults, and routes are not supported (use a `pick(..)` chain for those) — and panic if the positional arguments are missing or fail to parse.
 
     Both the enum body and the per-arity impls are emitted with the `internal_repeat!` macro (using the `(group,+)^` complement repetition to pad the type parameters not consumed by each arity), and the `clippy::type_complexity` lint is allowed locally inside the module.
-
 
 #### **BREAKING CHANGES** (API CHANGES):
 

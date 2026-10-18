@@ -24,9 +24,9 @@ let args: Vec<&str> = vec!["--name", "Bob", "--age", "24"];
 
 // Parse
 let (name, age) = args
-    .pick(&arg![name: String])
+    .pick(arg![name: String])
     .or(|| "Alice".to_string())
-    .pick(&arg![age: i32])
+    .pick(arg![age: i32])
     .or(|| 24)
     .post(|num| num.clamp(0, 120))
     .unwrap();

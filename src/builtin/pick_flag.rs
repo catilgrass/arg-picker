@@ -3,7 +3,7 @@ use crate::pickable_needed::*;
 use crate::value::Flag;
 
 impl<'a> Pickable<'a> for Flag {
-    fn get_attr(_: &'a PickerArg<'a, Self>) -> PickerArgAttr {
+    fn get_attr(_: &PickerArg<'a, Self>) -> PickerArgAttr {
         PickerArgAttr::Flag
     }
 

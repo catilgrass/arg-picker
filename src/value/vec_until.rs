@@ -86,7 +86,7 @@ impl<'a, T> Pickable<'a> for VecUntil<T>
 where
     T: SinglePickable + BoundaryCheck,
 {
-    fn get_attr(flag: &'a PickerArg<'a, Self>) -> PickerArgAttr {
+    fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr {
         PickerArgAttr::positional_or_multi(flag)
     }
 

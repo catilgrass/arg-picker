@@ -39,11 +39,13 @@ where
     pub internal_type: PhantomData<Type>,
 }
 
-impl<'a, Type> From<&'a Self> for PickerArg<'a, Type>
+// `Self` cannot be used in an impl header, so the implemented type is spelled out there.
+#[allow(clippy::use_self)]
+impl<'a, 'b, Type> From<&'b PickerArg<'a, Type>> for PickerArg<'a, Type>
 where
     Type: Pickable<'a>,
 {
-    fn from(value: &'a Self) -> Self {
+    fn from(value: &'b Self) -> Self {
         Self {
             full: value.full,
             short: value.short,
@@ -141,6 +143,20 @@ where
     pub const fn with_positional(mut self, positional: bool) -> Self {
         self.positional = positional;
         self
+    }
+
+    /// Returns a copy of this definition.
+    ///
+    /// Every field is `Copy` regardless of `Type`, so this does not require `Type: Copy`
+    /// (which the derived `Copy` would).
+    #[must_use]
+    pub(crate) const fn copied(&self) -> Self {
+        Self {
+            full: self.full,
+            short: self.short,
+            positional: self.positional,
+            internal_type: PhantomData,
+        }
     }
 
     /// Converts this `PickerArg` into a `PickerArgInfo` value.

@@ -113,11 +113,7 @@ struct ImplicitArgs {
 
 #[test]
 fn test_pickialize_implicit_short_long() {
-    let raw: &[&str] = &[
-        "-c", "3",
-        "--user-name", "alice",
-        "--server-name", "db",
-    ];
+    let raw: &[&str] = &["-c", "3", "--user-name", "alice", "--server-name", "db"];
     let parsed = <ImplicitArgs as Pickable>::pick(raw).unwrap();
     assert_eq!(parsed.count, 3);
     assert_eq!(parsed.user_name, "alice");
@@ -126,17 +122,12 @@ fn test_pickialize_implicit_short_long() {
 
 #[test]
 fn test_pickialize_implicit_short_derived_from_field() {
-    let raw: &[&str] = &[
-        "--count", "7",
-        "--user-name", "bob",
-        "-s", "web",
-    ];
+    let raw: &[&str] = &["--count", "7", "--user-name", "bob", "-s", "web"];
     let parsed = <ImplicitArgs as Pickable>::pick(raw).unwrap();
     assert_eq!(parsed.count, 7);
     assert_eq!(parsed.user_name, "bob");
     assert_eq!(parsed.server_name, "web");
 }
-
 
 #[derive(Pickable)]
 struct InnerNamed {
@@ -148,15 +139,12 @@ struct InnerNamed {
 
 #[test]
 fn test_composite_tag_does_not_claim_unrelated_flag() {
-    let (inner, verbose): (InnerNamed, Flag) = vec![
-        "--number", "1",
-        "--name", "alice",
-        "--verbose",
-    ]
-    .to_picker()
-    .pick(&arg![inner: InnerNamed])
-    .pick(&arg![verbose: Flag])
-    .unwrap();
+    let (inner, verbose): (InnerNamed, Flag) =
+        vec!["--number", "1", "--name", "alice", "--verbose"]
+            .to_picker()
+            .pick(arg![inner: InnerNamed])
+            .pick(arg![verbose: Flag])
+            .unwrap();
 
     assert_eq!(inner.number, 1);
     assert_eq!(inner.name, "alice");

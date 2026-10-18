@@ -6,7 +6,7 @@ use arg_picker::{IntoPicker, Pickable, macros::arg, value::Flag};
 fn test_option_named_absent_is_none() {
     let result: Result<Option<String>, &'static str> = Vec::<&str>::new()
         .with_route::<&'static str>()
-        .pick(&arg![name: Option<String>])
+        .pick(arg![name: Option<String>])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Ok(None));
@@ -16,7 +16,7 @@ fn test_option_named_absent_is_none() {
 fn test_option_named_present_with_value_is_some() {
     let result: Result<Option<String>, &'static str> = vec!["--name", "Alice"]
         .with_route::<&'static str>()
-        .pick(&arg![name: Option<String>])
+        .pick(arg![name: Option<String>])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Ok(Some("Alice".to_string())));
@@ -30,7 +30,7 @@ fn test_option_named_without_value_is_none() {
     // be is the same for the type inside as the argument not being there at all.
     let result: Result<Option<String>, &'static str> = vec!["--name"]
         .with_route::<&'static str>()
-        .pick(&arg![name: Option<String>])
+        .pick(arg![name: Option<String>])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Ok(None));
@@ -40,7 +40,7 @@ fn test_option_named_without_value_is_none() {
 fn test_required_named_without_value_is_still_a_failure() {
     let result: Result<String, &'static str> = vec!["--name"]
         .with_route::<&'static str>()
-        .pick(&arg![name: String])
+        .pick(arg![name: String])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Err("no_value"));
@@ -51,7 +51,7 @@ fn test_empty_inline_value_is_a_value() {
     // An inline value is written with the flag, so it is one whatever it is — even empty.
     let result: Result<Option<String>, &'static str> = vec!["--name="]
         .with_route::<&'static str>()
-        .pick(&arg![name: Option<String>])
+        .pick(arg![name: Option<String>])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Ok(Some(String::new())));
@@ -65,8 +65,8 @@ fn test_flag_after_valueless_argument_is_not_taken_as_its_value() {
     // it is left to be matched as the flag it names.
     let (name, install) = vec!["--name", "--install"]
         .to_picker()
-        .pick(&arg![name: Option<String>])
-        .pick(&arg![install: Flag])
+        .pick(arg![name: Option<String>])
+        .pick(arg![install: Flag])
         .unpack();
 
     assert_eq!(name, Some(None));
@@ -77,7 +77,7 @@ fn test_flag_after_valueless_argument_is_not_taken_as_its_value() {
 fn test_end_of_options_after_a_flag_is_not_taken_as_its_value() {
     let result: Result<Option<String>, &'static str> = vec!["--name", "--"]
         .with_route::<&'static str>()
-        .pick(&arg![name: Option<String>])
+        .pick(arg![name: Option<String>])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(result, Ok(None));
@@ -88,7 +88,7 @@ fn test_value_that_looks_like_a_flag_is_refused() {
     // A word that names an option is not a value, so this is a flag without one ...
     let refused: Result<i32, &'static str> = vec!["--count", "-5"]
         .with_route::<&'static str>()
-        .pick(&arg![count: i32])
+        .pick(arg![count: i32])
         .or_route(|| "no_value")
         .to_result();
     assert_eq!(refused, Err("no_value"));
@@ -96,7 +96,7 @@ fn test_value_that_looks_like_a_flag_is_refused() {
     // ... and writing the value with the flag is how a value like that is given.
     let given: i32 = vec!["--count=-5"]
         .to_picker()
-        .pick(&arg![count: i32])
+        .pick(arg![count: i32])
         .or_default()
         .unwrap();
     assert_eq!(given, -5);
@@ -108,14 +108,14 @@ fn test_value_that_looks_like_a_flag_is_refused() {
 fn test_option_positional_absent_is_none_and_present_is_some() {
     let absent: Option<String> = Vec::<&str>::new()
         .to_picker()
-        .pick(&arg![Option<String>])
+        .pick(arg![Option<String>])
         .or_default()
         .unwrap();
     assert_eq!(absent, None);
 
     let present: Option<String> = vec!["Alice"]
         .to_picker()
-        .pick(&arg![Option<String>])
+        .pick(arg![Option<String>])
         .or_default()
         .unwrap();
     assert_eq!(present, Some("Alice".to_string()));
@@ -126,7 +126,7 @@ fn test_flag_like_positional_after_end_of_options_is_a_value() {
     // After `--` everything is positional, so a value is allowed to look like a flag.
     let value: String = vec!["--", "--weird"]
         .to_picker()
-        .pick(&arg![String])
+        .pick(arg![String])
         .or_default()
         .unwrap();
     assert_eq!(value, "--weird");
@@ -138,7 +138,7 @@ fn test_flag_like_positional_after_end_of_options_is_a_value() {
 fn test_multi_named_present_with_values_is_the_list() {
     let files: Vec<String> = vec!["--files", "a.txt", "b.txt"]
         .to_picker()
-        .pick(&arg![files: Vec<String>])
+        .pick(arg![files: Vec<String>])
         .or_default()
         .unwrap();
     assert_eq!(files, vec!["a.txt", "b.txt"]);
@@ -148,7 +148,7 @@ fn test_multi_named_present_with_values_is_the_list() {
 fn test_multi_named_absent_is_empty() {
     let files: Vec<String> = Vec::<&str>::new()
         .to_picker()
-        .pick(&arg![files: Vec<String>])
+        .pick(arg![files: Vec<String>])
         .or_default()
         .unwrap();
     assert!(files.is_empty());
@@ -160,7 +160,7 @@ fn test_multi_named_without_values_is_empty() {
     // there at all is as well.
     let files: Vec<String> = vec!["--files"]
         .to_picker()
-        .pick(&arg![files: Vec<String>])
+        .pick(arg![files: Vec<String>])
         .or_default()
         .unwrap();
     assert!(files.is_empty());
@@ -170,8 +170,8 @@ fn test_multi_named_without_values_is_empty() {
 fn test_flag_after_valueless_list_argument_is_not_taken_as_its_value() {
     let (files, install) = vec!["--files", "--install"]
         .to_picker()
-        .pick(&arg![files: Vec<String>])
-        .pick(&arg![install: Flag])
+        .pick(arg![files: Vec<String>])
+        .pick(arg![install: Flag])
         .unpack();
 
     assert_eq!(files, Some(Vec::<String>::new()));
@@ -182,7 +182,7 @@ fn test_flag_after_valueless_list_argument_is_not_taken_as_its_value() {
 fn test_a_lone_dash_is_a_value_of_a_list() {
     let files: Vec<String> = vec!["--files", "-"]
         .to_picker()
-        .pick(&arg![files: Vec<String>])
+        .pick(arg![files: Vec<String>])
         .or_default()
         .unwrap();
     assert_eq!(files, vec!["-"]);
@@ -202,7 +202,7 @@ struct GenerateFlags {
 fn test_flag_struct_absent_arguments_are_none_and_inactive() {
     let flags: GenerateFlags = Vec::<&str>::new()
         .to_picker()
-        .pick(&arg![GenerateFlags])
+        .pick(arg![GenerateFlags])
         .or_default()
         .unwrap();
     assert_eq!(flags.generate, None);
@@ -213,7 +213,7 @@ fn test_flag_struct_absent_arguments_are_none_and_inactive() {
 fn test_flag_struct_given_a_value_parses() {
     let flags: GenerateFlags = vec!["--generate", "alice", "--install"]
         .to_picker()
-        .pick(&arg![GenerateFlags])
+        .pick(arg![GenerateFlags])
         .or_default()
         .unwrap();
     assert_eq!(flags.generate, Some("alice".to_string()));
@@ -226,7 +226,7 @@ fn test_flag_struct_with_a_valueless_argument_parses_it_as_none() {
     // `None`, so the struct parses and its other fields are read as usual.
     let flags: GenerateFlags = vec!["--generate"]
         .to_picker()
-        .pick(&arg![GenerateFlags])
+        .pick(arg![GenerateFlags])
         .or_default()
         .unwrap();
     assert_eq!(flags.generate, None);
@@ -239,7 +239,7 @@ fn test_flag_struct_does_not_take_a_flag_as_a_value() {
     // the flag it names.
     let flags: GenerateFlags = vec!["--generate", "--install"]
         .to_picker()
-        .pick(&arg![GenerateFlags])
+        .pick(arg![GenerateFlags])
         .or_default()
         .unwrap();
     assert_eq!(flags.generate, None);

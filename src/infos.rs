@@ -288,8 +288,8 @@ where
     }
 }
 
-impl<'a, T: Pickable<'a>> From<&'a PickerArg<'a, T>> for PickerArgInfo<'a> {
-    fn from(value: &'a PickerArg<'a, T>) -> Self {
+impl<'a, 'b, T: Pickable<'a>> From<&'b PickerArg<'a, T>> for PickerArgInfo<'a> {
+    fn from(value: &'b PickerArg<'a, T>) -> Self {
         let (long, alias) = if value.full.is_empty() {
             (None, None)
         } else {

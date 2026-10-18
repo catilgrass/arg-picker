@@ -10,7 +10,7 @@ internal_repeat!(1..=32 => {
         pub args: PickerArgs<'a>,
         pub error_route: Option<Route>,
         (
-            pub(crate) arg_$: &'a PickerArg<'a, T$>,
+            pub(crate) arg_$: PickerArg<'a, T$>,
             pub(crate) result_$: PickerArgResult<T$>,
             pub(crate) default_$: Option<Box<dyn FnOnce() -> T$>>,
             pub(crate) route_$: Option<Box<dyn FnOnce() -> Route>>,
@@ -126,7 +126,7 @@ internal_repeat!(1..32 => {
        /// This method extends the current picking pattern by appending an additional arg.
        /// The previous args and their results are preserved as part of the new pattern.
        /// The new arg's result is initially `Unparsed`.
-       pub fn pick<N>(self, arg: impl Into<&'a PickerArg<'a, N>>) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick<N>(self, arg: impl Into<PickerArg<'a, N>>) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a>,
        {
@@ -160,7 +160,7 @@ internal_repeat!(1..32 => {
        /// # Example
        ///
        #[allow(clippy::type_complexity)]
-       pub fn pick_or<N, F>(self, arg: impl Into<&'a PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick_or<N, F>(self, arg: impl Into<PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a>,
            F: FnMut() -> N + 'static,
@@ -175,7 +175,7 @@ internal_repeat!(1..32 => {
        /// # Example
        ///
        #[allow(clippy::type_complexity)]
-       pub fn pick_or_default<N>(self, arg: impl Into<&'a PickerArg<'a, N>>) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick_or_default<N>(self, arg: impl Into<PickerArg<'a, N>>) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a> + Default,
        {
@@ -189,7 +189,7 @@ internal_repeat!(1..32 => {
        /// # Example
        ///
        #[allow(clippy::type_complexity)]
-       pub fn pick_or_route<N, F>(self, arg: impl Into<&'a PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
+       pub fn pick_or_route<N, F>(self, arg: impl Into<PickerArg<'a, N>>, func: F) -> PickerPattern$+<'a, (T$,+), N, Route>
        where
            N: Pickable<'a>,
            F: FnMut() -> Route + 'static,

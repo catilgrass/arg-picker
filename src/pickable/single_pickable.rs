@@ -37,7 +37,7 @@ impl<'a, S> Pickable<'a> for S
 where
     S: SinglePickable,
 {
-    fn get_attr(flag: &'a PickerArg<'a, Self>) -> PickerArgAttr {
+    fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr {
         PickerArgAttr::positional_or_single(flag)
     }
 
@@ -58,7 +58,7 @@ impl<'a, S> Pickable<'a> for Option<S>
 where
     S: SinglePickable,
 {
-    fn get_attr(flag: &'a PickerArg<'a, Self>) -> PickerArgAttr {
+    fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr {
         PickerArgAttr::positional_or_single(flag)
     }
 

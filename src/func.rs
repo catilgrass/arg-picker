@@ -160,7 +160,7 @@ internal_repeat!(1..=32 => {
                 v$-,
             +)) = args
                 (
-                    .pick(&PickerArg::< T$- > {
+                    .pick(PickerArg::< T$- > {
                         full: &[],
                         short: None,
                         positional: true,

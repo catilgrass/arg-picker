@@ -118,7 +118,7 @@ internal_repeat!(1..=32 => {
             // ArgInfos
             let arg_infos: [PickerArgInfo; $] = [
               (
-                  PickerArgInfo::from(self.arg_$),
+                  PickerArgInfo::from(self.arg_$.copied()),
               +)
             ];
 
@@ -140,7 +140,7 @@ internal_repeat!(1..=32 => {
                 (
                     (
                         // Arg Attr
-                        T$::get_attr(self.arg_$),
+                        T$::get_attr(&self.arg_$),
 
                         // Tag Func
                         Box::new(|args, mask| {

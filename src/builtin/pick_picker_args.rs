@@ -1,7 +1,7 @@
 use crate::{PickerArgResult::Parsed, PickerArgs, parselib::build_masked_args, pickable_needed::*};
 
 impl<'a> Pickable<'a> for PickerArgs<'a> {
-    fn get_attr(_flag: &'a PickerArg<'a, Self>) -> PickerArgAttr {
+    fn get_attr(_flag: &PickerArg<'a, Self>) -> PickerArgAttr {
         // Use the lowest priority attribute
         PickerArgAttr::Postprocess
     }

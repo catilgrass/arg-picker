@@ -216,8 +216,8 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     let rest_args = &arg_exprs[1..];
 
     let pick_chain = quote! {
-        #root::IntoPicker::pick(raw_strs, &(#first_arg))
-        #( .pick(&(#rest_args)) )*
+        #root::IntoPicker::pick(raw_strs, #first_arg)
+        #( .pick(#rest_args) )*
     };
 
     // Build a precise tag phase: each field claims only what its own
@@ -300,7 +300,7 @@ fn expand_struct(input: DeriveInput) -> syn::Result<TokenStream2> {
     let impl_tokens = quote! {
         impl #impl_generics #root::Pickable<#pick_lifetime> for #struct_name #ty_generics #where_clause {
             fn get_attr(
-                _flag: &#pick_lifetime #root::PickerArg<#pick_lifetime, Self>,
+                _flag: &#root::PickerArg<#pick_lifetime, Self>,
             ) -> #root::PickerArgAttr {
                 #root::PickerArgAttr::Preprocess
             }

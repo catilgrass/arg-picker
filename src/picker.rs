@@ -300,18 +300,18 @@ impl<'a, Route> Picker<'a, Route> {
     ///
     /// This method initiates a parameter picking chain with one arg.
     /// The result is initially `Unparsed`.
-    pub fn pick<N>(self, arg: impl Into<&'a PickerArg<'a, N>>) -> PickerPattern1<'a, N, Route>
+    pub fn pick<N>(self, arg: impl Into<PickerArg<'a, N>>) -> PickerPattern1<'a, N, Route>
     where
         N: Pickable<'a>,
     {
-        Self::build_pattern1(self.args, arg.into(), None::<Route>)
+        Self::build_pattern1(self.args, arg, None::<Route>)
     }
 
     /// Creates a `PickerPattern1` from the given arg.
     /// If parsing fails, attempts the fallback arg.
     pub fn pick_or<N, F>(
         self,
-        arg: impl Into<&'a PickerArg<'a, N>>,
+        arg: impl Into<PickerArg<'a, N>>,
         or_arg: F,
     ) -> PickerPattern1<'a, N, Route>
     where
@@ -325,7 +325,7 @@ impl<'a, Route> Picker<'a, Route> {
     /// If parsing fails, uses the provided default value.
     pub fn pick_or_default<N>(
         self,
-        arg: impl Into<&'a PickerArg<'a, N>>,
+        arg: impl Into<PickerArg<'a, N>>,
     ) -> PickerPattern1<'a, N, Route>
     where
         N: Pickable<'a> + Default,
@@ -337,7 +337,7 @@ impl<'a, Route> Picker<'a, Route> {
     /// If parsing fails, switches to the given error route.
     pub fn pick_or_route<N, F>(
         self,
-        arg: impl Into<&'a PickerArg<'a, N>>,
+        arg: impl Into<PickerArg<'a, N>>,
         error_route: F,
     ) -> PickerPattern1<'a, N, Route>
     where
@@ -378,12 +378,12 @@ pub trait IntoPicker<'a> {
     ///
     /// This method converts the value into a `Picker` and starts a parameter
     /// picking chain with one arg. The result is initially `Unparsed`.
-    fn pick<N>(self, arg: impl Into<&'a PickerArg<'a, N>>) -> PickerPattern1<'a, N, ()>
+    fn pick<N>(self, arg: impl Into<PickerArg<'a, N>>) -> PickerPattern1<'a, N, ()>
     where
         Self: Sized,
         N: Pickable<'a> + Sized,
     {
-        Picker::build_pattern1(self.to_picker().args, arg.into(), None::<()>)
+        Picker::build_pattern1(self.to_picker().args, arg, None::<()>)
     }
 
     /// Starts building a picker pattern with the first argument, using a default value provider.
@@ -400,7 +400,7 @@ pub trait IntoPicker<'a> {
     /// * `func` — A closure that provides a default value if the arg is not provided by the user.
     fn pick_or<Next, F>(
         self,
-        arg: impl Into<&'a PickerArg<'a, Next>>,
+        arg: impl Into<PickerArg<'a, Next>>,
         func: F,
     ) -> PickerPattern1<'a, Next, ()>
     where
@@ -424,7 +424,7 @@ pub trait IntoPicker<'a> {
     /// * `arg` — The argument definition, typically obtained from [`crate::macros::arg`].
     fn pick_or_default<Next>(
         self,
-        arg: impl Into<&'a PickerArg<'a, Next>>,
+        arg: impl Into<PickerArg<'a, Next>>,
     ) -> PickerPattern1<'a, Next, ()>
     where
         Self: Sized,
@@ -447,7 +447,7 @@ pub trait IntoPicker<'a> {
     /// * `func` — A closure that produces a route value if the arg is not provided by the user.
     fn pick_or_route<Next, F, Route>(
         self,
-        arg: impl Into<&'a PickerArg<'a, Next>>,
+        arg: impl Into<PickerArg<'a, Next>>,
         func: F,
     ) -> PickerPattern1<'a, Next, Route>
     where
@@ -534,7 +534,7 @@ impl<'a, Route> Picker<'a, Route> {
     /// Build the `PickerPattern` via Arguments
     pub fn build_pattern1<N>(
         args: PickerArgs<'a>,
-        arg: &'a PickerArg<'a, N>,
+        arg: impl Into<PickerArg<'a, N>>,
         error_route: Option<Route>,
     ) -> PickerPattern1<'a, N, Route>
     where
@@ -543,7 +543,7 @@ impl<'a, Route> Picker<'a, Route> {
         PickerPattern1 {
             args,
             error_route,
-            arg_1: arg,
+            arg_1: arg.into(),
             result_1: PickerArgResult::Unparsed,
             route_1: None,
             default_1: None,

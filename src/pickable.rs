@@ -37,7 +37,7 @@ where
     /// # Returns
     ///
     /// Returns a [`PickerArgAttr`] describing the parse-order attribute of this flag.
-    fn get_attr(flag: &'a PickerArg<'a, Self>) -> PickerArgAttr;
+    fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr;
 
     /// Tag phase: Determines which argument positions the `Pickable` needs to handle.
     ///

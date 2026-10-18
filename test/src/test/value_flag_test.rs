@@ -7,7 +7,7 @@ use arg_picker::{IntoPicker, macros::arg};
 fn test_flag_present() {
     let flag: Flag = vec!["--verbose"]
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .unwrap();
     assert_eq!(flag, Flag::Active);
 }
@@ -18,7 +18,7 @@ fn test_flag_absent_returns_inactive() {
     // so or_default() is NOT required — unwrap() works directly.
     let flag: Flag = Vec::<&str>::new()
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .unwrap();
     assert_eq!(flag, Flag::Inactive);
 }
@@ -29,7 +29,7 @@ fn test_flag_absent_returns_inactive() {
 fn test_flag_short_present() {
     let flag: Flag = vec!["-v"]
         .to_picker()
-        .pick(&arg![verbose: Flag, 'v'])
+        .pick(arg![verbose: Flag, 'v'])
         .unwrap();
     assert_eq!(flag, Flag::Active);
 }
@@ -40,8 +40,8 @@ fn test_flag_short_present() {
 fn test_two_flags_both_present() {
     let (a, b): (Flag, Flag) = vec!["--flag-a", "--flag-b"]
         .to_picker()
-        .pick(&arg![flag_a: Flag])
-        .pick(&arg![flag_b: Flag])
+        .pick(arg![flag_a: Flag])
+        .pick(arg![flag_b: Flag])
         .unwrap();
     assert_eq!(a, Flag::Active);
     assert_eq!(b, Flag::Active);
@@ -51,8 +51,8 @@ fn test_two_flags_both_present() {
 fn test_two_flags_one_present() {
     let (a, b): (Flag, Flag) = vec!["--flag-a"]
         .to_picker()
-        .pick(&arg![flag_a: Flag])
-        .pick(&arg![flag_b: Flag])
+        .pick(arg![flag_a: Flag])
+        .pick(arg![flag_b: Flag])
         .unwrap();
     assert_eq!(a, Flag::Active);
     assert_eq!(b, Flag::Inactive);
@@ -62,8 +62,8 @@ fn test_two_flags_one_present() {
 fn test_two_flags_neither_present() {
     let (a, b): (Flag, Flag) = Vec::<&str>::new()
         .to_picker()
-        .pick(&arg![flag_a: Flag])
-        .pick(&arg![flag_b: Flag])
+        .pick(arg![flag_a: Flag])
+        .pick(arg![flag_b: Flag])
         .unwrap();
     assert_eq!(a, Flag::Inactive);
     assert_eq!(b, Flag::Inactive);
@@ -75,7 +75,7 @@ fn test_two_flags_neither_present() {
 fn test_flag_after_end_of_options() {
     let flag: Flag = vec!["--", "--verbose"]
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .unwrap();
     assert_eq!(flag, Flag::Inactive);
 }
@@ -86,7 +86,7 @@ fn test_flag_after_end_of_options() {
 fn test_flag_with_alias() {
     let flag: Flag = vec!["--cfg"]
         .to_picker()
-        .pick(&arg![config: Flag, "cfg"])
+        .pick(arg![config: Flag, "cfg"])
         .unwrap();
     assert_eq!(flag, Flag::Active);
 }
@@ -95,7 +95,7 @@ fn test_flag_with_alias() {
 fn test_flag_primary_name() {
     let flag: Flag = vec!["--config"]
         .to_picker()
-        .pick(&arg![config: Flag, "cfg"])
+        .pick(arg![config: Flag, "cfg"])
         .unwrap();
     assert_eq!(flag, Flag::Active);
 }
@@ -106,7 +106,7 @@ fn test_flag_primary_name() {
 fn test_unrelated_flag_does_not_match() {
     let flag: Flag = vec!["--other"]
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .unwrap();
     assert_eq!(flag, Flag::Inactive);
 }
@@ -117,7 +117,7 @@ fn test_unrelated_flag_does_not_match() {
 fn test_flag_to_result() {
     let result: Result<Flag, ()> = vec!["--verbose"]
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .to_result();
     assert_eq!(result, Ok(Flag::Active));
 }
@@ -126,7 +126,7 @@ fn test_flag_to_result() {
 fn test_flag_to_option() {
     let opt: Option<Flag> = vec!["--verbose"]
         .to_picker()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .to_option();
     assert_eq!(opt, Some(Flag::Active));
 }
@@ -167,7 +167,7 @@ fn test_flag_absent_does_not_trigger_route() {
     // Even without or_default / or_route, absent flag returns Inactive, not a route
     let result: Result<Flag, &str> = Vec::<&str>::new()
         .with_route::<&str>()
-        .pick(&arg![verbose: Flag])
+        .pick(arg![verbose: Flag])
         .or_route(|| "should_not_fire")
         .to_result();
     assert_eq!(result, Ok(Flag::Inactive));
