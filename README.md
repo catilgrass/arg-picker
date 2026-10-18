@@ -160,7 +160,7 @@ Add the following to your `Cargo.toml`
 ```toml
 # Cargo.toml
 [dependencies]
-arg-picker = "0.3"
+arg-picker = "0.4"
 ```
 
 or run `cargo add`
