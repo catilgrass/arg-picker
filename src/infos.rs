@@ -290,12 +290,13 @@ where
 
 impl<'a, 'b, T: Pickable<'a>> From<&'b PickerArg<'a, T>> for PickerArgInfo<'a> {
     fn from(value: &'b PickerArg<'a, T>) -> Self {
-        let (long, alias) = if value.full.is_empty() {
+        let names = value.full.as_slice();
+        let (long, alias) = if names.is_empty() {
             (None, None)
         } else {
-            let long = Some(value.full[0]);
-            let alias = if value.full.len() > 1 {
-                Some(value.full[1..].to_vec())
+            let long = Some(names[0]);
+            let alias = if names.len() > 1 {
+                Some(names[1..].to_vec())
             } else {
                 None
             };

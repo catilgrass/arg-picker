@@ -4,7 +4,7 @@
 
 use arg_picker_macros::internal_repeat;
 
-use crate::{IntoPicker, Pickable, PickerArg};
+use crate::{IntoPicker, Pickable, PickerArg, PickerNames};
 
 /// Helper trait that powers [`PickerFunction::from`], [`Picker::invoke`] and
 /// [`Picker::invoke_args`](crate::Picker::invoke_args).
@@ -161,7 +161,7 @@ internal_repeat!(1..=32 => {
             +)) = args
                 (
                     .pick(PickerArg::< T$- > {
-                        full: &[],
+                        full: PickerNames::Borrowed(&[]),
                         short: None,
                         positional: true,
                         internal_type: ::std::marker::PhantomData,

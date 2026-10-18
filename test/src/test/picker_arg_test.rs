@@ -1,6 +1,97 @@
 use arg_picker::value::Flag;
 use arg_picker::{IntoPicker, PickerArg, macros::arg};
 
+// Tuple constructors. The type is given through the turbofish, since `char`, `&str` and the
+// tuples say nothing about it.
+
+#[test]
+fn test_arg_from_short_character() {
+    let parsed: String = vec!["-n", "Alice"]
+        .to_picker()
+        .pick::<String>('n')
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_name() {
+    let parsed: String = vec!["--age", "42"]
+        .to_picker()
+        .pick::<String>("age")
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "42");
+}
+
+#[test]
+fn test_arg_from_positional() {
+    let parsed: String = vec!["Alice"]
+        .to_picker()
+        .pick::<String>(())
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_and_short() {
+    let parsed: String = vec!["--name", "Alice"]
+        .to_picker()
+        .pick::<String>(("name", 'n'))
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_alias_and_short() {
+    let parsed: String = vec!["--nick", "Alice"]
+        .to_picker()
+        .pick::<String>(("name", "nick", 'n'))
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_and_aliases() {
+    let parsed: String = vec!["--nmt", "Alice"]
+        .to_picker()
+        .pick::<String>(("name", "nick", "nmt"))
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_three_aliases_and_short() {
+    let parsed: String = vec!["--nm", "Alice"]
+        .to_picker()
+        .pick::<String>(("name", "nick", "nmt", "nm", 'n'))
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_long_three_aliases() {
+    let parsed: String = vec!["--nm", "Alice"]
+        .to_picker()
+        .pick::<String>(("name", "nick", "nmt", "nm"))
+        .or_default()
+        .unwrap();
+    assert_eq!(parsed, "Alice");
+}
+
+#[test]
+fn test_arg_from_tuple_has_the_expected_fields() {
+    let definition = PickerArg::<String>::from(("name", "nick", "nmt", "nm", 'n'));
+    assert_eq!(definition.full(), &["name", "nick", "nmt", "nm"][..]);
+    assert_eq!(definition.short(), Some('n'));
+    assert!(!definition.is_positional());
+}
+
 #[test]
 fn test_pick_accepts_arg_by_value() {
     let parsed: String = vec!["--name", "Alice"]

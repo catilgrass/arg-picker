@@ -115,7 +115,7 @@ fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) ->
         // it expands to the same form as `arg![Type]`.
         return quote! {
             #root::PickerArg::<#ty> {
-                full: &[],
+                full: #root::PickerNames::Borrowed(&[]),
                 short: ::std::option::Option::None,
                 positional: true,
                 internal_type: ::std::marker::PhantomData,
@@ -145,7 +145,7 @@ fn build_picker_arg(ident: &Ident, ty: &syn::Type, options: &FieldArgOptions) ->
 
     quote! {
         #root::PickerArg::<#ty> {
-            full: &[#(#full_lits),*],
+            full: #root::PickerNames::Borrowed(&[#(#full_lits),*]),
             short: #short_expr,
             positional: false,
             internal_type: ::std::marker::PhantomData,

@@ -75,6 +75,26 @@ None
     - **[`picker`]** The pick chain stores each `PickerArg` by value rather than holding a `&'a` reference to it, so a temporary `arg![...]` no longer has to outlive the parse.
     - **[`arg`]** `From<&PickerArg> for PickerArg` now takes the reference and the definition as independent lifetimes, so a local definition borrowed for a short time can be copied. `From<&PickerArg> for PickerArgInfo` is relaxed the same way.
 
+2. **[`arg`]** A `PickerArg` can now be built from its names instead of a struct literal. The type is given through the turbofish because the input says nothing about it:
+
+    - `'a'` — the short name only;
+    - `"age"` — the long name only;
+    - `()` — positional;
+    - `("aa", 'a')` — long and short;
+    - `("aa", "bb")` — long and one alias;
+    - `("aa", "bb", 'c')` — long, one alias and short;
+    - `("aa", "bb", "cc")` / `("aa", "bb", "cc", 'c')` — two aliases;
+    - `("aa", "bb", "cc", "dd")` / `("aa", "bb", "cc", "dd", 'c')` — three aliases.
+
+    ```rust
+    let parsed: String = args.pick::<String>(("name", "nick", 'n')).unwrap();
+    ```
+
+    The names are held in the value, so no allocation is made. The long name and aliases now live in [`PickerNames`], which is `Borrowed` for the slices `arg!` writes and `Inline` for at most four names from a tuple.
+
+    - **[`arg`]** Added `PickerNames` and its `as_slice`/`is_empty` accessors. `PickerArg::full` is now of that type, and `full()` returns `&[&'a str]` rather than `&'a [&'a str]` because an inline value borrows from the argument itself.
+    - **[`arg`]** `PickerArg::new` still takes a slice; `set_full`/`with_full`/`without_full` wrap it in `PickerNames::Borrowed`.
+
 #### **BREAKING CHANGES** (API CHANGES):
 
 1. **[`picker`]** The `pick` family's argument changed from `impl Into<&'a PickerArg<'a, N>>` to `impl Into<PickerArg<'a, N>>`. Passing `arg![...]` or `&arg![...]` still compiles, but a custom implementation of `Into<&PickerArg>` is no longer accepted; implement `Into<PickerArg>` instead.
@@ -85,7 +105,11 @@ None
 
     **Migration**: implementations of `get_attr` drop the lifetime from the reference, e.g. `fn get_attr(flag: &PickerArg<'a, Self>) -> PickerArgAttr`.
 
-3. **[`parselib:arg_matcher`]** **[`parselib:single_matcher`]** **[`parselib:multi_arg_matcher`]** A named parameter no longer takes a word that names an option as its value, which changes what several inputs mean. `--name --other` used to give `name` the value `"--other"`, leaving `--other` unmatchable; it now leaves `--name` without a value and `--other` free to be matched by whatever names it. The same holds for the end-of-options marker (`--name --`) and for a list (`--files --other`).
+3. **[`arg`]** `PickerArg::full` changed from `&'a [&'a str]` to `PickerNames<'a>`, and `full()` now returns `&[&'a str]` with the lifetime of the borrow rather than `'a`. A struct literal that writes `full: &[...]` must write `full: PickerNames::Borrowed(&[...])`; `PickerArg::new` is unchanged. Code that only calls `full()` keeps working, except where it relied on the returned slice living for `'a` or being usable in a `const` context.
+
+    **Migration**: use `PickerArg::new(&[...], short, positional)` or the tuple constructors where possible, so the representation stays out of the call site.
+
+4. **[`parselib:arg_matcher`]** **[`parselib:single_matcher`]** **[`parselib:multi_arg_matcher`]** A named parameter no longer takes a word that names an option as its value, which changes what several inputs mean. `--name --other` used to give `name` the value `"--other"`, leaving `--other` unmatchable; it now leaves `--name` without a value and `--other` free to be matched by whatever names it. The same holds for the end-of-options marker (`--name --`) and for a list (`--files --other`).
 
     What a parameter that is left without a value reads as is its type's own answer, and each is the same thing that type reads as when it is not there at all:
 
@@ -95,7 +119,7 @@ None
 
     **Migration**: a value that itself starts with the style's prefix must now be written with the separator — `--name=-5` rather than `--name -5`, or `/Name:/Users/me` rather than `/Name /Users/me` — or passed as a positional argument after the end-of-options marker. Code that relied on a following flag being read as the value should name the value it means instead.
 
-4. **[`pickable`]** The picker now calls `Pickable::pick_with` rather than `Pickable::pick`, so that an implementation can be told which argument the words are being read for. The new method is **additive** — its default forwards to `pick`, and `SinglePickable` implementors are unaffected — but an implementation of `Pickable` that expected `pick` to be the only pick phase will no longer be called by the picker, and one that reads a word differently depending on the argument it is read for must override `pick_with`.
+5. **[`pickable`]** The picker now calls `Pickable::pick_with` rather than `Pickable::pick`, so that an implementation can be told which argument the words are being read for. The new method is **additive** — its default forwards to `pick`, and `SinglePickable` implementors are unaffected — but an implementation of `Pickable` that expected `pick` to be the only pick phase will no longer be called by the picker, and one that reads a word differently depending on the argument it is read for must override `pick_with`.
 
     **Migration**: nothing is required of an implementation that only has `pick`; an implementation that needs the argument it is being read for should override `pick_with` and read the tagged words from there.
 

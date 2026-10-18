@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{PickerArg, PickerArgs};
+use crate::{PickerArg, PickerArgs, PickerNames};
 
 /// Remaining positional arguments (anything not consumed as an option).
 /// - `full`: `[]` (empty — not triggered by any `--` prefix).
@@ -9,7 +9,7 @@ use crate::{PickerArg, PickerArgs};
 ///   This constant is used internally to access any leftover arguments after
 ///   all defined flags/options have been processed.
 pub const REMAINS: PickerArg<PickerArgs> = PickerArg::<PickerArgs> {
-    full: &[],
+    full: PickerNames::Borrowed(&[]),
     short: None,
     positional: false,
     internal_type: PhantomData,

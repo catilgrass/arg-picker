@@ -1,6 +1,57 @@
 use crate::{Pickable, PickerArgInfo, parselib::ParserStyle};
 use std::marker::PhantomData;
 
+/// The long name and aliases of a [`PickerArg`].
+///
+/// The tuple constructors hold at most four names — the long name and three aliases — in the
+/// value itself, so building an argument allocates nothing. `arg!` and `#[derive(Pickable)]`
+/// borrow the slice they already write.
+#[derive(Clone, Copy)]
+pub enum PickerNames<'a> {
+    /// Names borrowed from a slice.
+    Borrowed(&'a [&'a str]),
+
+    /// Up to four names held inline; `len` is how many entries of `names` are in use.
+    #[non_exhaustive]
+    Inline {
+        /// The names, with the unused entries beyond `len` left empty.
+        names: [&'a str; 4],
+        /// The number of used entries in `names`.
+        len: u8,
+    },
+}
+
+impl Default for PickerNames<'_> {
+    fn default() -> Self {
+        Self::Borrowed(&[])
+    }
+}
+
+impl<'a> PickerNames<'a> {
+    /// Returns the names as a slice.
+    #[must_use]
+    pub fn as_slice(&self) -> &[&'a str] {
+        match self {
+            Self::Borrowed(names) => names,
+            Self::Inline { names, len } => &names[..usize::from(*len)],
+        }
+    }
+
+    /// Returns `true` if there are no names.
+    #[must_use]
+    pub const fn is_empty(&self) -> bool {
+        match self {
+            Self::Borrowed(names) => names.is_empty(),
+            Self::Inline { len, .. } => *len == 0,
+        }
+    }
+
+    /// Holds up to four names inline.
+    const fn inline(names: [&'a str; 4], len: u8) -> Self {
+        Self::Inline { names, len }
+    }
+}
+
 /// Represents a constraint definition for a parameter selection.
 ///
 /// This structure describes the constraints that a command-line parameter (Picker parameter item)
@@ -21,13 +72,34 @@ use std::marker::PhantomData;
 ///   - `false`: The parameter is a named (flag-based) parameter.
 ///
 /// - `_type`: [`PhantomData`] to hold the type parameter.
+///
+/// # Construction
+///
+/// A definition can be a struct literal, [`PickerArg::new`], or a conversion from its names. The
+/// type is explicit in every conversion, because the names say nothing about it:
+///
+/// ```
+/// use arg_picker::PickerArg;
+///
+/// let short = PickerArg::<String>::from('n');
+/// assert!(short.full().is_empty());
+/// assert_eq!(short.short(), Some('n'));
+///
+/// let named = PickerArg::<String>::from(("name", "nick", 'n'));
+/// assert_eq!(named.full(), &["name", "nick"][..]);
+/// assert_eq!(named.short(), Some('n'));
+///
+/// let positional = PickerArg::<String>::from(());
+/// assert!(positional.full().is_empty());
+/// assert!(positional.is_positional());
+/// ```
 #[derive(Default, Clone, Copy)]
 pub struct PickerArg<'a, Type>
 where
     Type: Pickable<'a>,
 {
-    /// Full name, may include variant names (aliases), e.g., `["config", "cfg"]`.
-    pub full: &'a [&'a str],
+    /// Long name and aliases, e.g. `["config", "cfg"]`.
+    pub full: PickerNames<'a>,
 
     /// Short name, e.g., `'c'`.
     pub short: Option<char>,
@@ -63,7 +135,22 @@ where
     #[must_use]
     pub const fn new(full: &'a [&'a str], short: Option<char>, positional: bool) -> Self {
         Self {
-            full,
+            full: PickerNames::Borrowed(full),
+            short,
+            positional,
+            internal_type: PhantomData,
+        }
+    }
+
+    /// Builds an argument from names held inline.
+    const fn from_inline(
+        names: [&'a str; 4],
+        len: u8,
+        short: Option<char>,
+        positional: bool,
+    ) -> Self {
+        Self {
+            full: PickerNames::inline(names, len),
             short,
             positional,
             internal_type: PhantomData,
@@ -72,8 +159,8 @@ where
 
     /// Returns the full name list (including aliases).
     #[must_use]
-    pub const fn full(&self) -> &'a [&'a str] {
-        self.full
+    pub fn full(&self) -> &[&'a str] {
+        self.full.as_slice()
     }
 
     /// Returns the short name, if any.
@@ -97,7 +184,7 @@ where
 
     /// Sets the full name list.
     pub const fn set_full(&mut self, full: &'a [&'a str]) {
-        self.full = full;
+        self.full = PickerNames::Borrowed(full);
     }
 
     /// Sets the short name.
@@ -113,14 +200,14 @@ where
     /// Sets the full name list and returns self.
     #[must_use]
     pub const fn with_full(mut self, full: &'a [&'a str]) -> Self {
-        self.full = full;
+        self.full = PickerNames::Borrowed(full);
         self
     }
 
     /// Clears the full name list (sets it to an empty slice) and returns self.
     #[must_use]
     pub const fn without_full(mut self) -> Self {
-        self.full = &[];
+        self.full = PickerNames::Borrowed(&[]);
         self
     }
 
@@ -164,13 +251,13 @@ where
     /// This is a convenience method equivalent to calling `PickerArgInfo::from(self)`.
     #[must_use]
     pub fn into_info(self) -> PickerArgInfo<'a> {
-        let value = self;
-        let (long, alias) = if value.full.is_empty() {
+        let names = self.full.as_slice();
+        let (long, alias) = if names.is_empty() {
             (None, None)
         } else {
-            let long = Some(value.full[0]);
-            let alias = if value.full.len() > 1 {
-                Some(value.full[1..].to_vec())
+            let long = Some(names[0]);
+            let alias = if names.len() > 1 {
+                Some(names[1..].to_vec())
             } else {
                 None
             };
@@ -178,14 +265,106 @@ where
         };
 
         PickerArgInfo {
-            short: value.short,
+            short: self.short,
             long,
             alias,
-            positional: value.positional,
+            positional: self.positional,
             optional: false,
             multi: false,
             is_flag: false,
         }
+    }
+}
+
+impl<'a, Type> From<char> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from(short: char) -> Self {
+        Self::from_inline(["", "", "", ""], 0, Some(short), false)
+    }
+}
+
+impl<'a, Type> From<&'a str> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from(long: &'a str) -> Self {
+        Self::from_inline([long, "", "", ""], 1, None, false)
+    }
+}
+
+impl<'a, Type> From<()> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((): ()) -> Self {
+        Self::from_inline(["", "", "", ""], 0, None, true)
+    }
+}
+
+impl<'a, Type> From<(&'a str, char)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, short): (&'a str, char)) -> Self {
+        Self::from_inline([long, "", "", ""], 1, Some(short), false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, alias): (&'a str, &'a str)) -> Self {
+        Self::from_inline([long, alias, "", ""], 2, None, false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str, &'a str)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, alias_1, alias_2): (&'a str, &'a str, &'a str)) -> Self {
+        Self::from_inline([long, alias_1, alias_2, ""], 3, None, false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str, &'a str, &'a str)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, alias_1, alias_2, alias_3): (&'a str, &'a str, &'a str, &'a str)) -> Self {
+        Self::from_inline((long, alias_1, alias_2, alias_3).into(), 4, None, false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str, char)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, alias, short): (&'a str, &'a str, char)) -> Self {
+        Self::from_inline([long, alias, "", ""], 2, Some(short), false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str, &'a str, char)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from((long, alias_1, alias_2, short): (&'a str, &'a str, &'a str, char)) -> Self {
+        Self::from_inline([long, alias_1, alias_2, ""], 3, Some(short), false)
+    }
+}
+
+impl<'a, Type> From<(&'a str, &'a str, &'a str, &'a str, char)> for PickerArg<'a, Type>
+where
+    Type: Pickable<'a>,
+{
+    fn from(
+        (long, alias_1, alias_2, alias_3, short): (&'a str, &'a str, &'a str, &'a str, char),
+    ) -> Self {
+        Self::from_inline([long, alias_1, alias_2, alias_3], 4, Some(short), false)
     }
 }
 

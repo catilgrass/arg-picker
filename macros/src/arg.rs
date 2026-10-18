@@ -61,6 +61,8 @@ pub(crate) fn arg(input: TokenStream) -> TokenStream {
         None => aliases,
     };
 
+    let root = crate::picker_root();
+
     let path: TS2 = {
         let ty_ts: TS2 = ty
             .map(|t| {
@@ -69,10 +71,7 @@ pub(crate) fn arg(input: TokenStream) -> TokenStream {
             })
             .unwrap_or(TS2::new());
 
-        let import = {
-            let root = crate::picker_root();
-            quote! { #root::PickerArg }
-        };
+        let import = quote! { #root::PickerArg };
 
         if ty.is_some() {
             quote! { #import::<#ty_ts> }
@@ -105,7 +104,7 @@ pub(crate) fn arg(input: TokenStream) -> TokenStream {
 
     let result = quote! {
         #path {
-            full: #full_value,
+            full: #root::PickerNames::Borrowed(#full_value),
             short: #short_value,
             positional: #positional_value,
             internal_type: ::std::marker::PhantomData,
