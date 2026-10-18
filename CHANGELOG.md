@@ -9,7 +9,8 @@ Any contributor making changes to the project must record their changes in this 
 ## TOC
 
 - [Unreleased](#unreleased)
-- [Release 0.4.0 (Unreleased)](#040-unreleased)
+- [Release 0.4.1 (Unreleased)](#041-unreleased)
+- [Release 0.4.0 (2026-10-18)](#040-2026-10-18)
 - [Release 0.3.2 (2026-09-16)](#032-2026-09-16)
 - [Release 0.3.1 (2026-09-16)](#031-2026-09-16)
 - [Release 0.3.0 (2026-09-06)](#030-2026-09-06)
@@ -39,7 +40,27 @@ None
 
 ---
 
-### Release 0.4.0 (Unreleased)
+### Release 0.4.1 (Unreleased)
+
+#### Fixes:
+
+None
+
+#### Optimizations:
+
+None
+
+#### Features:
+
+None
+
+#### **BREAKING CHANGES** (API CHANGES):
+
+None
+
+---
+
+### Release 0.4.0 (2026-10-18)
 
 #### Fixes:
 
